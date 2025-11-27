@@ -1,0 +1,10 @@
+services:
+  postgres:
+    image: 'postgres:latest'
+    environment:
+      - 'POSTGRES_DB=volunteer_db'
+      - 'POSTGRES_PASSWORD=volunteer'
+      - 'POSTGRES_USER=volunteer'
+    ports:
+      - '5432'
+

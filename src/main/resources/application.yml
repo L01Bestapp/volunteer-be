@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: volunteer
+
+  profiles:
+    active: dev
