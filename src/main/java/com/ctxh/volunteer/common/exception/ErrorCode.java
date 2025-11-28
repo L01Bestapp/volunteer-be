@@ -52,6 +52,7 @@ public enum ErrorCode {
     ORGANIZATION_NAME_ALREADY_EXISTS(1402, "Organization name already exists", HttpStatus.CONFLICT),
     INVALID_ORGANIZATION_TYPE(1403, "Invalid organization type", HttpStatus.BAD_REQUEST),
     ORGANIZATION_SUSPENDED(1404, "Organization has been suspended", HttpStatus.FORBIDDEN),
+    INVALID_RATING_FOR_ORGANIZATION(1405, "Rating must be between 1 and 5", HttpStatus.BAD_REQUEST),
 
     // ============ ACTIVITY ERRORS (1500-1599) ============
     ACTIVITY_NOT_FOUND(1500, "Activity not found", HttpStatus.NOT_FOUND),
