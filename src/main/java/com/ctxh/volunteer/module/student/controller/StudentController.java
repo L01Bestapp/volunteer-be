@@ -1,10 +1,13 @@
 package com.ctxh.volunteer.module.student.controller;
 
 import com.ctxh.volunteer.common.dto.ApiResponse;
+import com.ctxh.volunteer.module.certificate.dto.CertificateResponseDto;
+import com.ctxh.volunteer.module.student.dto.ParticipationHistoryDto;
 import com.ctxh.volunteer.module.student.dto.request.CreateStudentRequestDto;
 import com.ctxh.volunteer.module.student.dto.request.UpdateStudentRequestDto;
 import com.ctxh.volunteer.module.student.dto.response.StudentResponseDto;
 import com.ctxh.volunteer.module.student.service.StudentService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -14,8 +17,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/students")
@@ -37,7 +43,7 @@ public class StudentController {
         );
     }
 
-        /**
+    /**
      * Update student information
      * PUT /api/v1/students/{id}
      */
@@ -53,6 +59,7 @@ public class StudentController {
 
 
     // sau này cần sửa getStudentById có param lấy từ Authenicated user
+
     /**
      * Get student by ID
      * GET /api/v1/students/{id}
@@ -74,103 +81,34 @@ public class StudentController {
         );
     }
 
-//
+    // ============ PARTICIPATION HISTORY ============
 
-//
-//    /**
-//     * Delete student
-//     * DELETE /api/v1/students/{id}
-//     */
-//    @DeleteMapping("/{id}")
-//    @ResponseStatus(HttpStatus.NO_CONTENT)
-//    public ApiResponse<Void> deleteStudent(@PathVariable("id") Long studentId) {
-//        studentService.deleteStudent(studentId);
-//        return ApiResponse.ok("Student deleted successfully", null);
-//    }
-//
-//    /**
-//     * Get all students with pagination
-//     * GET /api/v1/students
-//     */
-//    @GetMapping
-//    public ApiResponse<Page<StudentListResponseDto>> getAllStudents(
-//            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
-//            Pageable pageable) {
-//        return ApiResponse.ok(studentService.getAllStudents(pageable)
-//        );
-//    }
-//
-//    /**
-//     * Search students by keyword (name or MSSV)
-//     * GET /api/v1/students/search?keyword={keyword}
-//     */
-//    @GetMapping("/search")
-//    public ApiResponse<Page<StudentListResponseDto>> searchStudents(
-//            @RequestParam("keyword") String keyword,
-//            @PageableDefault(size = 20, sort = "fullName", direction = Sort.Direction.ASC)
-//            Pageable pageable) {
-//        return ApiResponse.ok(
-//                "Search completed successfully",
-//                studentService.searchStudents(keyword, pageable)
-//        );
-//    }
-//
-//    /**
-//     * Get students by faculty
-//     * GET /api/v1/students/faculty?name={facultyName}
-//     */
-//    @GetMapping("/faculty")
-//    public ApiResponse<Page<StudentListResponseDto>> getStudentsByFaculty(
-//            @RequestParam("name") String facultyName,
-//            @PageableDefault(size = 20, sort = "fullName", direction = Sort.Direction.ASC)
-//            Pageable pageable) {
-//        return ApiResponse.ok(
-//                "Students retrieved successfully",
-//                studentService.getStudentsByFaculty(facultyName, pageable)
-//        );
-//    }
-//
-//    /**
-//     * Get students by academic year
-//     * GET /api/v1/students/academic-year?year={year}
-//     */
-//    @GetMapping("/academic-year")
-//    public ApiResponse<Page<StudentListResponseDto>> getStudentsByAcademicYear(
-//            @RequestParam("year") String year,
-//            @PageableDefault(size = 20, sort = "fullName", direction = Sort.Direction.ASC)
-//            Pageable pageable) {
-//        return ApiResponse.ok(
-//                "Students retrieved successfully",
-//                studentService.getStudentsByAcademicYear(year, pageable)
-//        );
-//    }
-//
+    /**
+     * Get student's participation history
+     * GET /api/v1/students/participation/history
+     */
+    @Operation(summary = "get student's participation history")
+    @GetMapping("/participation/history")
+    public ApiResponse<List<ParticipationHistoryDto>> getParticipationHistory(
+            @RequestParam("studentId") Long studentId) {
+        return ApiResponse.ok(
+                "Participation history retrieved successfully",
+                studentService.getParticipationHistory(studentId)
+        );
+    }
 
-//
-//    /**
-//     * Get student by QR code
-//     * GET /api/v1/students/qr-code?data={qrCodeData}
-//     */
-//    @GetMapping("/qr-code")
-//    public ApiResponse<StudentResponseDto> getStudentByQrCode(
-//            @RequestParam("data") String qrCodeData) {
-//        return ApiResponse.ok(
-//                "Student retrieved successfully",
-//                studentService.getStudentByQrCode(qrCodeData)
-//        );
-//    }
-//
-//    /**
-//     * Update CTXH days for student
-//     * PATCH /api/v1/students/{id}/ctxh-days?days={days}
-//     */
-//    @PutMapping("/{id}/ctxh-days")
-//    public ApiResponse<StudentResponseDto> updateCtxhDays(
-//            @PathVariable("id") Long studentId,
-//            @RequestParam("days") Double days) {
-//        return ApiResponse.ok(
-//                "CTXH days updated successfully",
-//                studentService.updateCtxhDays(studentId, days)
-//        );
-//    }
+    /**
+     * Get student's certificates
+     * GET /api/v1/students/certificates
+     */
+    @Operation(summary = "get student's certificates")
+    @GetMapping("/certificates")
+    public ApiResponse<List<CertificateResponseDto>> getStudentCertificates(
+            @RequestParam("studentId") Long studentId) {
+        return ApiResponse.ok(
+                "Certificates retrieved successfully",
+                studentService.getStudentCertificates(studentId)
+        );
+    }
+
 }
