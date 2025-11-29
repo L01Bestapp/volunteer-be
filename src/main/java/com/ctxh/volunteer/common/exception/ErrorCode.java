@@ -77,6 +77,8 @@ public enum ErrorCode {
     ENROLLMENT_NOT_APPROVED(1605, "Enrollment is not approved", HttpStatus.BAD_REQUEST),
     ENROLLMENT_ALREADY_COMPLETED(1606, "Enrollment has already been completed", HttpStatus.BAD_REQUEST),
     INVALID_ENROLLMENT_STATUS(1607, "Invalid enrollment status", HttpStatus.BAD_REQUEST),
+    ENROLLMENT_ALREADY_APPROVED(1608, "Enrollment has already been approved", HttpStatus.BAD_REQUEST),
+    ENROLLMENT_NOT_PENDING(1609, "Enrollment is not pending", HttpStatus.BAD_REQUEST),
 
     // ============ ATTENDANCE ERRORS (1700-1799) ============
     ATTENDANCE_NOT_FOUND(1700, "Attendance record not found", HttpStatus.NOT_FOUND),

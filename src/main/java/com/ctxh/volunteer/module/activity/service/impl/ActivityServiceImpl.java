@@ -11,6 +11,10 @@ import com.ctxh.volunteer.module.activity.enums.ActivityCategory;
 import com.ctxh.volunteer.module.activity.enums.ActivityStatus;
 import com.ctxh.volunteer.module.activity.repository.ActivityRepository;
 import com.ctxh.volunteer.module.activity.service.ActivityService;
+import com.ctxh.volunteer.module.enrollment.dto.EnrollmentResponseDto;
+import com.ctxh.volunteer.module.enrollment.entity.Enrollment;
+import com.ctxh.volunteer.module.enrollment.entity.Enrollment.EnrollmentStatus;
+import com.ctxh.volunteer.module.enrollment.repository.EnrollmentRepository;
 import com.ctxh.volunteer.module.organization.entity.Organization;
 import com.ctxh.volunteer.module.organization.repository.OrganizationRepository;
 import jakarta.validation.Valid;
@@ -29,6 +33,7 @@ public class ActivityServiceImpl implements ActivityService {
 
     private final ActivityRepository activityRepository;
     private final OrganizationRepository organizationRepository;
+    private final EnrollmentRepository enrollmentRepository;
 
     @Override
     @Transactional
@@ -197,6 +202,115 @@ public class ActivityServiceImpl implements ActivityService {
         return mapToActivityResponseDto(closedActivity);
     }
 
+    // ============ ENROLLMENT MANAGEMENT ============
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<EnrollmentResponseDto> getActivityEnrollments(Long activityId) {
+        // Verify activity exists
+        if (!activityRepository.existsById(activityId)) {
+            throw new BusinessException(ErrorCode.ACTIVITY_NOT_FOUND);
+        }
+
+        List<Enrollment> enrollments = enrollmentRepository.findByActivityId(activityId);
+        return enrollments.stream()
+                .map(this::mapToEnrollmentResponseDto)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<EnrollmentResponseDto> getPendingEnrollments(Long activityId) {
+        // Verify activity exists
+        if (!activityRepository.existsById(activityId)) {
+            throw new BusinessException(ErrorCode.ACTIVITY_NOT_FOUND);
+        }
+
+        List<Enrollment> enrollments = enrollmentRepository.findByActivityIdAndStatus(
+                activityId,
+                EnrollmentStatus.PENDING
+        );
+        return enrollments.stream()
+                .map(this::mapToEnrollmentResponseDto)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<EnrollmentResponseDto> getApprovedEnrollments(Long activityId) {
+        // Verify activity exists
+        if (!activityRepository.existsById(activityId)) {
+            throw new BusinessException(ErrorCode.ACTIVITY_NOT_FOUND);
+        }
+
+        List<Enrollment> enrollments = enrollmentRepository.findByActivityIdAndStatus(
+                activityId,
+                EnrollmentStatus.APPROVED
+        );
+        return enrollments.stream()
+                .map(this::mapToEnrollmentResponseDto)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<EnrollmentResponseDto> getRejectedEnrollments(Long activityId) {
+        // Verify activity exists
+        if (!activityRepository.existsById(activityId)) {
+            throw new BusinessException(ErrorCode.ACTIVITY_NOT_FOUND);
+        }
+
+        List<Enrollment> enrollments = enrollmentRepository.findByActivityIdAndStatus(
+                activityId,
+                EnrollmentStatus.REJECTED
+        );
+        return enrollments.stream()
+                .map(this::mapToEnrollmentResponseDto)
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public EnrollmentResponseDto approveEnrollment(Long activityId, Long enrollmentId, Long approvedByUserId) {
+        // Find enrollment and verify it belongs to the activity
+        Enrollment enrollment = enrollmentRepository.findByIdAndActivityId(enrollmentId, activityId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ENROLLMENT_NOT_FOUND));
+
+        // Check if enrollment is pending
+        if (enrollment.getStatus() != EnrollmentStatus.PENDING) {
+            throw new BusinessException(ErrorCode.ENROLLMENT_NOT_PENDING);
+        }
+
+        // Approve enrollment
+        enrollment.approve(approvedByUserId);
+        Enrollment approvedEnrollment = enrollmentRepository.save(enrollment);
+        log.info("Approved enrollment ID: {} for activity ID: {} by user ID: {}",
+                enrollmentId, activityId, approvedByUserId);
+
+        return mapToEnrollmentResponseDto(approvedEnrollment);
+    }
+
+    @Override
+    @Transactional
+    public EnrollmentResponseDto rejectEnrollment(Long activityId, Long enrollmentId, Long rejectedByUserId) {
+        // Find enrollment and verify it belongs to the activity
+        Enrollment enrollment = enrollmentRepository.findByIdAndActivityId(enrollmentId, activityId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ENROLLMENT_NOT_FOUND));
+
+        // Check if enrollment is pending
+        if (enrollment.getStatus() != EnrollmentStatus.PENDING) {
+            throw new BusinessException(ErrorCode.ENROLLMENT_NOT_PENDING);
+        }
+
+        // Reject enrollment
+        enrollment.reject(rejectedByUserId);
+        Enrollment rejectedEnrollment = enrollmentRepository.save(enrollment);
+        log.info("Rejected enrollment ID: {} for activity ID: {} by user ID: {}",
+                enrollmentId, activityId, rejectedByUserId);
+
+        return mapToEnrollmentResponseDto(rejectedEnrollment);
+    }
+
     // ============ MAPPING METHODS ============
 
     private ActivityResponseDto mapToActivityResponseDto(Activity activity) {
@@ -240,6 +354,30 @@ public class ActivityServiceImpl implements ActivityService {
                 .remainingSlots(activity.getRemainingSlots())
                 .status(activity.getStatus())
                 .createdAt(activity.getCreateAt())
+                .build();
+    }
+
+    private EnrollmentResponseDto mapToEnrollmentResponseDto(Enrollment enrollment) {
+        return EnrollmentResponseDto.builder()
+                .enrollmentId(enrollment.getEnrollmentId())
+                .status(enrollment.getStatus())
+                .appliedAt(enrollment.getAppliedAt())
+                .approvedAt(enrollment.getApprovedAt())
+                .approvedBy(enrollment.getApprovedBy())
+                .rejectedAt(enrollment.getRejectedAt())
+                .rejectedBy(enrollment.getRejectedBy())
+                .isCompleted(enrollment.getIsCompleted())
+                .completedAt(enrollment.getCompletedAt())
+                .studentId(enrollment.getStudent().getStudentId())
+                .fullName(enrollment.getStudent().getFullName())
+                .mssv(enrollment.getStudent().getMssv())
+                .email(enrollment.getStudent().getUser().getEmail())
+                .phoneNumber(enrollment.getStudent().getPhoneNumber())
+                .academicYear(enrollment.getStudent().getAcademicYear())
+                .faculty(enrollment.getStudent().getFaculty())
+                .gender(enrollment.getStudent().getGender())
+                .dateOfBirth(enrollment.getStudent().getDateOfBirth())
+                .totalCtxhDays(enrollment.getStudent().getTotalCtxhDays())
                 .build();
     }
 }

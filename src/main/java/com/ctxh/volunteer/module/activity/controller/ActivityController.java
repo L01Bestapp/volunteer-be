@@ -6,6 +6,7 @@ import com.ctxh.volunteer.module.activity.dto.request.UpdateActivityRequestDto;
 import com.ctxh.volunteer.module.activity.dto.response.ActivityListResponseDto;
 import com.ctxh.volunteer.module.activity.dto.response.ActivityResponseDto;
 import com.ctxh.volunteer.module.activity.service.ActivityService;
+import com.ctxh.volunteer.module.enrollment.dto.EnrollmentResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -110,6 +111,90 @@ public class ActivityController {
         return ApiResponse.ok(
                 "Activity registration closed successfully",
                 activityService.closeActivityRegistration(organizationId, activityId)
+        );
+    }
+
+    // ============ ENROLLMENT MANAGEMENT ============
+
+    /**
+     * Get all enrollments for an activity
+     * GET /api/v1/activities/{activityId}/enrollments
+     */
+    @GetMapping("/{activityId}/enrollments")
+    public ApiResponse<List<EnrollmentResponseDto>> getActivityEnrollments(
+            @PathVariable("activityId") Long activityId) {
+        return ApiResponse.ok(
+                "Enrollments retrieved successfully",
+                activityService.getActivityEnrollments(activityId)
+        );
+    }
+
+    /**
+     * Get pending enrollments for an activity
+     * GET /api/v1/activities/{activityId}/enrollments/pending
+     */
+    @GetMapping("/{activityId}/enrollments/pending")
+    public ApiResponse<List<EnrollmentResponseDto>> getPendingEnrollments(
+            @PathVariable("activityId") Long activityId) {
+        return ApiResponse.ok(
+                "Pending enrollments retrieved successfully",
+                activityService.getPendingEnrollments(activityId)
+        );
+    }
+
+    /**
+     * Get approved enrollments for an activity
+     * GET /api/v1/activities/{activityId}/enrollments/approved
+     */
+    @GetMapping("/{activityId}/enrollments/approved")
+    public ApiResponse<List<EnrollmentResponseDto>> getApprovedEnrollments(
+            @PathVariable("activityId") Long activityId) {
+        return ApiResponse.ok(
+                "Approved enrollments retrieved successfully",
+                activityService.getApprovedEnrollments(activityId)
+        );
+    }
+
+    /**
+     * Get rejected enrollments for an activity
+     * GET /api/v1/activities/{activityId}/enrollments/rejected
+     */
+    @GetMapping("/{activityId}/enrollments/rejected")
+    public ApiResponse<List<EnrollmentResponseDto>> getRejectedEnrollments(
+            @PathVariable("activityId") Long activityId) {
+        return ApiResponse.ok(
+                "Rejected enrollments retrieved successfully",
+                activityService.getRejectedEnrollments(activityId)
+        );
+    }
+
+    /**
+     * Approve an enrollment
+     * PATCH /api/v1/activities/{activityId}/enrollments/{enrollmentId}/approve
+     */
+    @PatchMapping("/{activityId}/enrollments/{enrollmentId}/approve")
+    public ApiResponse<EnrollmentResponseDto> approveEnrollment(
+            @PathVariable("activityId") Long activityId,
+            @PathVariable("enrollmentId") Long enrollmentId,
+            @RequestParam("approvedBy") Long approvedByUserId) {
+        return ApiResponse.ok(
+                "Enrollment approved successfully",
+                activityService.approveEnrollment(activityId, enrollmentId, approvedByUserId)
+        );
+    }
+
+    /**
+     * Reject an enrollment
+     * PATCH /api/v1/activities/{activityId}/enrollments/{enrollmentId}/reject
+     */
+    @PatchMapping("/{activityId}/enrollments/{enrollmentId}/reject")
+    public ApiResponse<EnrollmentResponseDto> rejectEnrollment(
+            @PathVariable("activityId") Long activityId,
+            @PathVariable("enrollmentId") Long enrollmentId,
+            @RequestParam("rejectedBy") Long rejectedByUserId) {
+        return ApiResponse.ok(
+                "Enrollment rejected successfully",
+                activityService.rejectEnrollment(activityId, enrollmentId, rejectedByUserId)
         );
     }
 }
