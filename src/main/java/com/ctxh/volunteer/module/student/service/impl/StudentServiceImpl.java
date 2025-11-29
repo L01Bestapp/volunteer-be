@@ -4,21 +4,21 @@ import com.ctxh.volunteer.common.exception.BusinessException;
 import com.ctxh.volunteer.common.exception.ErrorCode;
 import com.ctxh.volunteer.module.student.dto.request.CreateStudentRequestDto;
 import com.ctxh.volunteer.module.student.dto.request.UpdateStudentRequestDto;
-import com.ctxh.volunteer.module.student.dto.response.StudentListResponseDto;
 import com.ctxh.volunteer.module.student.dto.response.StudentResponseDto;
 import com.ctxh.volunteer.module.student.entity.Student;
 import com.ctxh.volunteer.module.student.enums.Gender;
 import com.ctxh.volunteer.module.student.repository.StudentRepository;
 import com.ctxh.volunteer.module.student.service.StudentService;
-import com.ctxh.volunteer.module.user.entity.User;
-import com.ctxh.volunteer.module.user.repository.UserRepository;
+import com.ctxh.volunteer.module.auth.entity.User;
+import com.ctxh.volunteer.module.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import static com.ctxh.volunteer.common.util.AppConstants.DEFAULT_AVATAR_URL;
+
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +27,6 @@ public class StudentServiceImpl implements StudentService {
 
     private final StudentRepository studentRepository;
     private final PasswordEncoder passwordEncoder;
-    private final static String DEFAULT_AVATAR_URL = "https://example.com/default-avatar.png";
     private final UserRepository userRepository;
 
     @Override
@@ -37,9 +36,14 @@ public class StudentServiceImpl implements StudentService {
             throw new BusinessException(ErrorCode.MSSV_ALREADY_EXISTS);
         }
 
+        if (userRepository.existsByEmail(requestDto.getEmail())) {
+            throw new BusinessException(ErrorCode.EMAIL_ALREADY_REGISTERED);
+        }
+
         User user = User.builder()
                 .email(requestDto.getEmail())
                 .password(passwordEncoder.encode(requestDto.getPassword()))
+                .avatarUrl(DEFAULT_AVATAR_URL)
                 .build();
 
         // Create student
@@ -48,10 +52,10 @@ public class StudentServiceImpl implements StudentService {
                 .fullName(requestDto.getFullName())
                 .mssv(requestDto.getMssv())
                 .gender(Gender.valueOf(requestDto.getGender()))
-                .avatarUrl(DEFAULT_AVATAR_URL)
                 .totalCtxhDays(0.0)
                 .build();
 
+        student.generateQrCode();
         user.setStudent(student);
         userRepository.save(user);
         Student savedStudent = user.getStudent();
@@ -60,107 +64,66 @@ public class StudentServiceImpl implements StudentService {
         return mapToStudentResponseDto(savedStudent);
     }
 
-//    // ============ STUDENT CRUD OPERATIONS ============
-//
-//    @Override
-//    @Transactional(readOnly = true)
-//    public StudentResponseDto getStudentById(Long studentId) {
-//        Student student = studentRepository.findById(studentId)
-//                .orElseThrow(() -> new BusinessException(ErrorCode.STUDENT_NOT_FOUND));
-//        return mapToStudentResponseDto(student);
-//    }
-//
-//    @Override
-//    @Transactional(readOnly = true)
-//    public StudentResponseDto getStudentByMssv(String mssv) {
-//        Student student = studentRepository.findByMssv(mssv)
-//                .orElseThrow(() -> new BusinessException(ErrorCode.STUDENT_NOT_FOUND));
-//        return mapToStudentResponseDto(student);
-//    }
-//
-//    @Override
-//    @Transactional
-//    public StudentResponseDto createStudent(CreateStudentRequestDto requestDto) {
-//        // Validate MSSV uniqueness
-//        if (studentRepository.existsByMssv(requestDto.getMssv())) {
-//            throw new BusinessException(ErrorCode.MSSV_ALREADY_EXISTS);
-//        }
-//
-//        // Validate user doesn't already have a student profile
-//        if (studentRepository.existsByUser_UserId(requestDto.getUserId())) {
-//            throw new BusinessException(ErrorCode.USER_ALREADY_EXISTS);
-//        }
-//
-//        // Create User reference (assuming User exists)
-//        User user = new User();
-//        user.setUserId(requestDto.getUserId());
-//
-//        // Create student
-//        Student student = Student.builder()
-//                .user(user)
-//                .fullName(requestDto.getFullName())
-//                .mssv(requestDto.getMssv())
-//                .academicYear(requestDto.getAcademicYear())
-//                .faculty(requestDto.getFaculty())
-//                .dateOfBirth(requestDto.getDateOfBirth())
-//                .gender(requestDto.getGender())
-//                .avatarUrl(requestDto.getAvatarUrl())
-//                .bio(requestDto.getBio())
-//                .totalCtxhDays(0.0)
-//                .build();
-//
-//        // Generate QR code
-//        student.generateQrCode();
-//
-//        Student savedStudent = studentRepository.save(student);
-//        log.info("Created student with ID: {}", savedStudent.getStudentId());
-//
-//        return mapToStudentResponseDto(savedStudent);
-//    }
-//
-//    @Override
-//    @Transactional
-//    public StudentResponseDto updateStudent(Long studentId, UpdateStudentRequestDto requestDto) {
-//        Student student = studentRepository.findById(studentId)
-//                .orElseThrow(() -> new BusinessException(ErrorCode.STUDENT_NOT_FOUND));
-//
-//        // Update fields if provided
-//        if (requestDto.getFullName() != null) {
-//            student.setFullName(requestDto.getFullName());
-//        }
-//        if (requestDto.getMssv() != null) {
-//            // Check if new MSSV is already taken by another student
-//            if (!requestDto.getMssv().equals(student.getMssv()) &&
-//                    studentRepository.existsByMssv(requestDto.getMssv())) {
-//                throw new BusinessException(ErrorCode.MSSV_ALREADY_EXISTS);
-//            }
-//            student.setMssv(requestDto.getMssv());
-//        }
-//        if (requestDto.getAcademicYear() != null) {
-//            student.setAcademicYear(requestDto.getAcademicYear());
-//        }
-//        if (requestDto.getFaculty() != null) {
-//            student.setFaculty(requestDto.getFaculty());
-//        }
-//        if (requestDto.getDateOfBirth() != null) {
-//            student.setDateOfBirth(requestDto.getDateOfBirth());
-//        }
-//        if (requestDto.getGender() != null) {
-//            student.setGender(requestDto.getGender());
-//        }
-//        if (requestDto.getAvatarUrl() != null) {
-//            student.setAvatarUrl(requestDto.getAvatarUrl());
-//        }
-//        if (requestDto.getBio() != null) {
-//            student.setBio(requestDto.getBio());
-//        }
-//
-//        Student updatedStudent = studentRepository.save(student);
-//        log.info("Updated student with ID: {}", studentId);
-//
-//        return mapToStudentResponseDto(updatedStudent);
-//    }
-//
+
+    // sau này có Authentication thì bỏ studentId vào lấy từ token
+    @Transactional
+    @Override
+    public StudentResponseDto updateStudent(Long studentId, UpdateStudentRequestDto requestDto) {
+        User user = userRepository.findById(studentId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.STUDENT_NOT_FOUND));
+
+        Student student = user.getStudent();
+
+        // Update fields if provided
+        if (requestDto.getFullName() != null) {
+            student.setFullName(requestDto.getFullName());
+        }
+
+        if (requestDto.getPhoneNumber() != null) {
+            student.setPhoneNumber(requestDto.getPhoneNumber());
+        }
+
+        if (requestDto.getAcademicYear() != null) {
+            student.setAcademicYear(requestDto.getAcademicYear());
+        }
+        if (requestDto.getFaculty() != null) {
+            student.setFaculty(requestDto.getFaculty());
+        }
+        if (requestDto.getDateOfBirth() != null) {
+            student.setDateOfBirth(requestDto.getDateOfBirth());
+        }
+        if (requestDto.getGender() != null) {
+            student.setGender(Gender.valueOf(requestDto.getGender()));
+        }
+
+        if (requestDto.getBio() != null) {
+            user.setBio(requestDto.getBio());
+        }
+
+        userRepository.save(user);
+        log.info("Updated student with ID: {}", studentId);
+        Student updatedStudent = studentRepository.save(student);
+        return mapToStudentResponseDto(updatedStudent);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public StudentResponseDto getStudentById(Long studentId) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.STUDENT_NOT_FOUND));
+        return mapToStudentResponseDto(student);
+    }
+
+    @Override
+    public StudentResponseDto getStudentByMssv(String mssv) {
+        Student student = studentRepository.findByMssv(mssv)
+                .orElseThrow(() -> new BusinessException(ErrorCode.STUDENT_NOT_FOUND));
+        return mapToStudentResponseDto(student);
+    }
+
+
+    //    // ============ STUDENT CRUD OPERATIONS ============
+
 //    @Override
 //    @Transactional
 //    public void deleteStudent(Long studentId) {
@@ -245,7 +208,7 @@ public class StudentServiceImpl implements StudentService {
     private StudentResponseDto mapToStudentResponseDto(Student student) {
         return StudentResponseDto.builder()
                 .studentId(student.getStudentId())
-                .phoneNumber(student.getUser().getPhoneNumber())
+                .phoneNumber(student.getPhoneNumber())
                 .email(student.getUser().getEmail())
                 .fullName(student.getFullName())
                 .mssv(student.getMssv())
@@ -254,10 +217,9 @@ public class StudentServiceImpl implements StudentService {
                 .totalCtxhDays(student.getTotalCtxhDays())
                 .dateOfBirth(student.getDateOfBirth())
                 .gender(student.getGender())
-                .avatarUrl(student.getAvatarUrl())
-                .bio(student.getBio())
+                .avatarUrl(student.getUser().getAvatarUrl())
+                .bio(student.getUser().getBio())
                 .qrCodeData(student.getQrCodeData())
-                .qrCodeGeneratedAt(student.getQrCodeGeneratedAt())
                 .createdAt(student.getCreateAt())
                 .updatedAt(student.getUpdateAt())
                 .build();

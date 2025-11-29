@@ -1,7 +1,7 @@
-package com.ctxh.volunteer.module.user.entity;
+package com.ctxh.volunteer.module.auth.entity;
 
 import com.ctxh.volunteer.common.entity.BaseEntity;
-import com.ctxh.volunteer.module.organization.Organization;
+import com.ctxh.volunteer.module.organization.entity.Organization;
 import com.ctxh.volunteer.module.student.entity.Student;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.hypersistence.utils.hibernate.id.Tsid;
@@ -39,11 +39,15 @@ public class User extends BaseEntity {
     @Column(name = "email",unique = true, nullable = false,length = 100)
     private String email;
 
-    @Column(name = "phone_number",unique = true,length = 11)
-    private String phoneNumber;
-
     @JsonIgnore
     private String password;
+
+    @Column(name = "avatar_url", length = 500)
+    private String avatarUrl;
+
+    @Column(name = "bio", columnDefinition = "TEXT")
+    private String bio;
+    // ============ RELATIONSHIPS ============
 
     @ManyToMany
     private List<Role> roles;
@@ -89,7 +93,7 @@ public class User extends BaseEntity {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Student student;
 
-    @OneToOne(mappedBy = "user")
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Organization organization;
 
     // ============ BUSINESS HELPER METHODS ============

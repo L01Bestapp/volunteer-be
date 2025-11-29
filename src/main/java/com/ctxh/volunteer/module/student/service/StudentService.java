@@ -2,35 +2,19 @@ package com.ctxh.volunteer.module.student.service;
 
 import com.ctxh.volunteer.module.student.dto.request.CreateStudentRequestDto;
 import com.ctxh.volunteer.module.student.dto.request.UpdateStudentRequestDto;
-import com.ctxh.volunteer.module.student.dto.response.StudentListResponseDto;
 import com.ctxh.volunteer.module.student.dto.response.StudentResponseDto;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import jakarta.validation.Valid;
 
 public interface StudentService {
     StudentResponseDto registerStudent(CreateStudentRequestDto requestDto);
+
+    StudentResponseDto updateStudent(Long studentId, @Valid UpdateStudentRequestDto requestDto);
+
+    StudentResponseDto getStudentById(Long studentId);
+
+    StudentResponseDto getStudentByMssv(String mssv);
     //  --------------------------------------------------------------
 
-//    /**
-//     * Get student by ID
-//     */
-//    StudentResponseDto getStudentById(Long studentId);
-//
-//    /**
-//     * Get student by MSSV
-//     */
-//    StudentResponseDto getStudentByMssv(String mssv);
-//
-//    /**
-//     * Create new student
-//     */
-//    StudentResponseDto createStudent(CreateStudentRequestDto requestDto);
-//
-//    /**
-//     * Update student information
-//     */
-//    StudentResponseDto updateStudent(Long studentId, UpdateStudentRequestDto requestDto);
-//
 //    /**
 //     * Delete student
 //     */

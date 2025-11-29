@@ -1,5 +1,6 @@
-package com.ctxh.volunteer.module.student.dto.response;
+package com.ctxh.volunteer.module.organization.dto.response;
 
+import com.ctxh.volunteer.module.organization.enums.OrganizationType;
 import com.ctxh.volunteer.module.student.enums.Gender;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,20 +16,15 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class StudentResponseDto {
-    private Long studentId;
+public class OrganizationResponseDto {
+    private Long organizationId;
     private String email;
-    private String phoneNumber;
-    private String fullName;
-    private String mssv;
-    private String academicYear;
-    private String faculty;
-    private Double totalCtxhDays;
-    private LocalDate dateOfBirth;
-    private Gender gender;
+    private String organizationName;
     private String avatarUrl;
     private String bio;
-    private String qrCodeData;
+    private String representativeName;
+    private String representativeEmail;
+    private String representativePhoneNumber;
+    private OrganizationType type;
     private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
 }

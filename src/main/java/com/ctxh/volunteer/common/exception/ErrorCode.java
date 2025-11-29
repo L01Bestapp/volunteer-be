@@ -65,6 +65,7 @@ public enum ErrorCode {
     INVALID_ACTIVITY_DATE(1507, "Invalid activity date range", HttpStatus.BAD_REQUEST),
     ACTIVITY_ALREADY_COMPLETED(1508, "Activity has already been completed", HttpStatus.BAD_REQUEST),
     NOT_ACTIVITY_OWNER(1509, "You are not the owner of this activity", HttpStatus.FORBIDDEN),
+    ACTIVITY_CANNOT_REGISTER(1510, "Cannot register for this activity", HttpStatus.BAD_REQUEST),
 
     // ============ ENROLLMENT ERRORS (1600-1699) ============
     ENROLLMENT_NOT_FOUND(1600, "Enrollment not found", HttpStatus.NOT_FOUND),

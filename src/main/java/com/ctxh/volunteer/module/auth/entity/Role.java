@@ -1,4 +1,4 @@
-package com.ctxh.volunteer.module.user.entity;
+package com.ctxh.volunteer.module.auth.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

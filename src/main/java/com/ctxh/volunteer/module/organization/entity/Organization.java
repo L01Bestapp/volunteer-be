@@ -1,10 +1,10 @@
-package com.ctxh.volunteer.module.organization;
+package com.ctxh.volunteer.module.organization.entity;
 
-import com.ctxh.volunteer.module.activity.entity.Activity;
 import com.ctxh.volunteer.common.entity.BaseEntity;
-import com.ctxh.volunteer.common.exception.BusinessException;
-import com.ctxh.volunteer.common.exception.ErrorCode;
-import com.ctxh.volunteer.module.user.entity.User;
+import com.ctxh.volunteer.module.activity.entity.Activity;
+import com.ctxh.volunteer.module.organization.enums.OrganizationType;
+import com.ctxh.volunteer.module.organization.enums.VerificationStatus;
+import com.ctxh.volunteer.module.auth.entity.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.hypersistence.utils.hibernate.id.Tsid;
 import jakarta.persistence.*;
@@ -46,9 +46,15 @@ public class Organization extends BaseEntity {
     @JsonIgnore
     private User user;
 
-    // ============ ORGANIZATION INFORMATION ============
+    @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     @Builder.Default
-    private Boolean isVerified = false;
+    private List<Activity> activities = new ArrayList<>();
+
+    // ============ ORGANIZATION INFORMATION ============
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private VerificationStatus verificationStatus = VerificationStatus.PENDING;
 
     @Column(name = "organization_name", nullable = false, unique = true, length = 200)
     private String organizationName;
@@ -56,31 +62,6 @@ public class Organization extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false, length = 50)
     private OrganizationType type;
-
-    @Column(name = "short_name", length = 50)
-    private String shortName; // Tên viết tắt
-
-    @Column(name = "description", columnDefinition = "TEXT")
-    private String description;
-
-    @Column(name = "mission", columnDefinition = "TEXT")
-    private String mission; // Sứ mệnh
-
-    @Column(name = "vision", columnDefinition = "TEXT")
-    private String vision; // Tầm nhìn
-
-    // ============ SOCIAL MEDIA ============
-    @Column(name = "facebook_url", length = 255)
-    private String facebookUrl;
-
-    @Column(name = "instagram_url", length = 255)
-    private String instagramUrl;
-
-    @Column(name = "linkedin_url", length = 255)
-    private String linkedinUrl;
-
-    @Column(name = "youtube_url", length = 255)
-    private String youtubeUrl;
 
     // ============ REPRESENTATIVE INFORMATION ============
     @Column(name = "representative_name", length = 100)
@@ -91,12 +72,6 @@ public class Organization extends BaseEntity {
 
     @Column(name = "representative_email", length = 100)
     private String representativeEmail;
-
-    @Column(name = "logo_url", length = 500)
-    private String logoUrl;
-
-    @Column(name = "cover_image_url", length = 500)
-    private String coverImageUrl;
     // ============ STATISTICS ============
 
     @Column(name = "total_activities_created", nullable = false)
@@ -104,55 +79,6 @@ public class Organization extends BaseEntity {
     private Integer totalActivitiesCreated = 0;
 
     private Integer completedActivitiesCount = 0;
-
-    // ============ RATING ============
-
-    @Column(name = "average_rating", precision = 3)
-    @Builder.Default
-    private Double averageRating = 0.0;
-
-    @Column(name = "total_ratings", nullable = false)
-    @Builder.Default
-    private Integer totalRatings = 0;
-
-    @Column(name = "rating_sum", nullable = false)
-    @Builder.Default
-    private Integer ratingSum = 0;
-
-    // ============ RELATIONSHIPS ============
-
-    @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnore
-    @Builder.Default
-    private List<Activity> activities = new ArrayList<>();
-
-    // ============ ENUMS ============
-
-    /**
-     * Organization Type enum
-     */
-    public enum OrganizationType {
-        UNIVERSITY_DEPARTMENT,  // Phòng ban trường
-        STUDENT_UNION,          // Đoàn - Hội sinh viên
-        CLUB,                   // Câu lạc bộ
-        NGO,                    // Tổ chức phi chính phủ
-        COMPANY,                // Doanh nghiệp
-        GOVERNMENT,             // Cơ quan chính phủ
-        CHARITY,                // Từ thiện
-        FOUNDATION,             // Quỹ
-        COMMUNITY_GROUP,        // Nhóm cộng đồng
-        OTHER                   // Khác
-    }
-
-    /**
-     * Verification Status enum
-     */
-    public enum VerificationStatus {
-        PENDING,        // Chờ xét duyệt
-        APPROVED,       // Đã duyệt
-        REJECTED,       // Bị từ chối
-        NEED_MORE_INFO  // Cần bổ sung thông tin
-    }
 
     // ============ HELPER METHODS ============
 
@@ -181,19 +107,6 @@ public class Organization extends BaseEntity {
         this.completedActivitiesCount++;
     }
 
-    /**
-     * Add rating
-     */
-    public void addRating(int rating) {
-        if (rating < 1 || rating > 5) {
-            throw new BusinessException(ErrorCode.INVALID_RATING_FOR_ORGANIZATION);
-        }
-        this.ratingSum += rating;
-        this.totalRatings++;
-        this.averageRating = (double) this.ratingSum / this.totalRatings;
-    }
-
-
 
     /**
      * Get completion rate
@@ -206,20 +119,10 @@ public class Organization extends BaseEntity {
     }
 
     /**
-     * Check if profile is complete
-     */
-    public boolean isProfileComplete() {
-        return organizationName != null && !organizationName.isEmpty()
-                && type != null
-                && description != null && !description.isEmpty()
-                && representativeName != null && !representativeName.isEmpty();
-    }
-
-    /**
      * Check if can create activities
      */
     public boolean canCreateActivities() {
-        return isVerified;
+        return verificationStatus == VerificationStatus.APPROVED;
     }
 
     @Override
@@ -241,7 +144,6 @@ public class Organization extends BaseEntity {
                 "organizationId=" + organizationId +
                 ", organizationName='" + organizationName + '\'' +
                 ", type=" + type +
-                ", isVerified=" + isVerified +
                 ", totalActivitiesCreated=" + totalActivitiesCreated +
                 '}';
     }

@@ -1,10 +1,13 @@
 package com.ctxh.volunteer.module.activity.entity;
 
-import com.ctxh.volunteer.module.attendance.entity.Attendance;
 import com.ctxh.volunteer.common.entity.BaseEntity;
+import com.ctxh.volunteer.common.exception.BusinessException;
+import com.ctxh.volunteer.common.exception.ErrorCode;
+import com.ctxh.volunteer.module.activity.enums.ActivityCategory;
+import com.ctxh.volunteer.module.activity.enums.ActivityStatus;
+import com.ctxh.volunteer.module.attendance.entity.Attendance;
 import com.ctxh.volunteer.module.enrollment.entity.Enrollment;
-import com.ctxh.volunteer.module.organization.Organization;
-import com.ctxh.volunteer.module.tag.Tag;
+import com.ctxh.volunteer.module.organization.entity.Organization;
 import com.ctxh.volunteer.module.task.entity.Task;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.hypersistence.utils.hibernate.id.Tsid;
@@ -18,7 +21,6 @@ import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -33,14 +35,15 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.ctxh.volunteer.common.util.AppConstants.REGISTRATION_MULTIPLIER;
+
 @Entity
 @Table(name = "activities", indexes = {
         @Index(name = "idx_activity_org", columnList = "organization_id"),
 //        @Index(name = "idx_activity_start_date", columnList = "start_date"),
 //        @Index(name = "idx_activity_status", columnList = "status"),
-//        @Index(name = "idx_activity_category", columnList = "category"),
+        @Index(name = "idx_activity_category", columnList = "category"),
 //        @Index(name = "idx_activity_registration_deadline", columnList = "registration_deadline"),
-//        @Index(name = "idx_activity_featured", columnList = "is_featured")
 })
 @Getter
 @Setter
@@ -73,10 +76,6 @@ public class Activity extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "category", length = 50)
     private ActivityCategory category;
-
-    @ManyToMany
-    private List<Tag> tags;
-
     // ============ DATE & TIME ============
 
     @Column(name = "start_date_time", nullable = false)
@@ -85,11 +84,11 @@ public class Activity extends BaseEntity {
     @Column(name = "end_date_time", nullable = false)
     private LocalDateTime endDateTime;
 
-    @Column(name = "registration_deadline")
-    private LocalDateTime registrationDeadline;
-
     @Column(name = "registration_opens_at")
     private LocalDateTime registrationOpensAt;
+
+    @Column(name = "registration_deadline")
+    private LocalDateTime registrationDeadline;
 
     // ============ LOCATION ============
     @Column(name = "address", length = 500)
@@ -120,15 +119,6 @@ public class Activity extends BaseEntity {
     @Builder.Default
     private ActivityStatus status = ActivityStatus.DRAFT;
 
-    @Column(name = "published_at")
-    private LocalDateTime publishedAt;
-
-    @Column(name = "cancelled_at")
-    private LocalDateTime cancelledAt;
-
-    @Column(name = "cancellation_reason", columnDefinition = "TEXT")
-    private String cancellationReason;
-
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
 
@@ -137,7 +127,6 @@ public class Activity extends BaseEntity {
     private String requirements;
 
     // ============ BENEFITS & REWARDS ============
-
     private Integer benefitsCtxh;
 
     // ============ RELATIONSHIPS ============
@@ -156,65 +145,36 @@ public class Activity extends BaseEntity {
     @JsonIgnore
     @Builder.Default
     private List<Attendance> attendances = new ArrayList<>();
-
-    // ============ ENUMS ============
-
-    /**
-     * Activity Status enum
-     */
-    public enum ActivityStatus {
-        DRAFT,          // Nháp
-        PUBLISHED,      // Đã xuất bản
-        OPEN,           // Đang tuyển
-        FULL,           // Đã đủ người
-        CLOSED,         // Đã đóng đăng ký
-        IN_PROGRESS,    // Đang diễn ra
-        COMPLETED,      // Đã hoàn thành
-        CANCELLED       // Đã hủy
-    }
-
-    /**
-     * Activity Category enum
-     */
-    public enum ActivityCategory {
-        EDUCATION,          // Giáo dục
-        HEALTHCARE,         // Y tế
-        ENVIRONMENT,        // Môi trường
-        COMMUNITY,          // Cộng đồng
-        CULTURE,            // Văn hóa
-        SPORTS,             // Thể thao
-        TECHNOLOGY,         // Công nghệ
-        SOCIAL_WELFARE,     // Phúc lợi xã hội
-        DISASTER_RELIEF,    // Cứu trợ thiên tai
-        ANIMAL_WELFARE,     // Phúc lợi động vật
-        ELDERLY_CARE,       // Chăm sóc người cao tuổi
-        CHILDREN,           // Trẻ em
-        DISABILITY_SUPPORT, // Hỗ trợ người khuyết tật
-        POVERTY_ALLEVIATION,// Xóa đói giảm nghèo
-        OTHER               // Khác
-    }
-
-
     // ============ HELPER METHODS ============
 
     /**
-     * Check if registration is open
+     * Check if a new registration is allowed (for PENDING)
      */
-    public boolean isRegistrationOpen() {
-
-        if (status != ActivityStatus.PUBLISHED && status != ActivityStatus.OPEN) {
+    public boolean canRegister() {
+        // Nếu activity không mở đăng ký thì thôi
+        if (status != ActivityStatus.OPEN) {
             return false;
         }
 
-        if (registrationDeadline != null && LocalDateTime.now().isAfter(registrationDeadline)) {
+        // Hết hạn đăng ký
+        if (isRegistrationDeadlinePassed()) {
             return false;
         }
 
-        if (maxParticipants != null && approvedParticipants >= maxParticipants) {
+        // ĐÃ ĐỦ NGƯỜI ĐƯỢC DUYỆT -> KHÔNG CHO ĐĂNG KÝ THÊM
+        if (approvedParticipants >= maxParticipants) {
             return false;
         }
 
-        return !(registrationOpensAt != null && LocalDateTime.now().isBefore(registrationOpensAt));
+        // Chưa đến ngày mở đăng ký
+        if (registrationOpensAt != null && LocalDateTime.now().isBefore(registrationOpensAt)) {
+            return false;
+        }
+
+        // Giới hạn tổng số đăng ký (PENDING + APPROVED)
+        int maxRegistrations = maxParticipants * REGISTRATION_MULTIPLIER;
+
+        return currentParticipants < maxRegistrations;
     }
 
     /**
@@ -264,6 +224,9 @@ public class Activity extends BaseEntity {
      * Increment pending count
      */
     public void incrementPending() {
+        if (!canRegister()) {
+            throw new BusinessException(ErrorCode.ACTIVITY_CANNOT_REGISTER);
+        }
         this.pendingParticipants++;
         this.currentParticipants++;
     }
@@ -279,21 +242,19 @@ public class Activity extends BaseEntity {
     }
 
     /**
-     * Move from pending to approved
+     * Move from pending to approve
      */
     public void approvePending() {
-        if (this.pendingParticipants > 0) {
-            this.pendingParticipants--;
-            incrementParticipants();
+        if (this.pendingParticipants <= 0) {
+            return;
         }
-    }
 
-    /**
-     * Publish activity
-     */
-    public void publish() {
-        this.status = ActivityStatus.PUBLISHED;
-        this.publishedAt = LocalDateTime.now();
+        if (maxParticipants != null && approvedParticipants >= maxParticipants) {
+            throw new BusinessException(ErrorCode.ACTIVITY_FULL);
+        }
+
+        this.pendingParticipants--;
+        incrementParticipants();
     }
 
     /**
@@ -319,16 +280,6 @@ public class Activity extends BaseEntity {
     }
 
     /**
-     * Cancel activity
-     */
-    public void cancel(String reason) {
-        this.status = ActivityStatus.CANCELLED;
-        this.cancelledAt = LocalDateTime.now();
-        this.cancellationReason = reason;
-    }
-
-
-    /**
      * Check if activity has started
      */
     public boolean hasStarted() {
@@ -343,18 +294,11 @@ public class Activity extends BaseEntity {
     }
 
     /**
-     * Check if registration deadline passed
+     * Check if the registration deadline passed
      */
     public boolean isRegistrationDeadlinePassed() {
         return registrationDeadline != null &&
                 LocalDateTime.now().isAfter(registrationDeadline);
-    }
-
-    /**
-     * Get duration in days
-     */
-    public int getDurationInDays() {
-        return (int) ChronoUnit.DAYS.between(startDateTime, endDateTime) + 1;
     }
 
     /**
@@ -374,7 +318,7 @@ public class Activity extends BaseEntity {
     }
 
     /**
-     * Add task
+     * Add a task
      */
     public void addTask(Task task) {
         tasks.add(task);
