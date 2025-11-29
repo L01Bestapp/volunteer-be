@@ -11,6 +11,7 @@ import com.ctxh.volunteer.module.attendance.dto.QrCheckOutRequestDto;
 import com.ctxh.volunteer.module.attendance.entity.Attendance;
 import com.ctxh.volunteer.module.attendance.repository.AttendanceRepository;
 import com.ctxh.volunteer.module.attendance.service.AttendanceService;
+import com.ctxh.volunteer.module.certificate.service.CertificateService;
 import com.ctxh.volunteer.module.enrollment.EnrollmentStatus;
 import com.ctxh.volunteer.module.enrollment.entity.Enrollment;
 import com.ctxh.volunteer.module.enrollment.repository.EnrollmentRepository;
@@ -36,6 +37,7 @@ public class AttendanceServiceImpl implements AttendanceService {
     private final StudentRepository studentRepository;
     private final ActivityRepository activityRepository;
     private final EnrollmentRepository enrollmentRepository;
+    private final CertificateService certificateService;
 
     @Override
     @Transactional
@@ -116,11 +118,29 @@ public class AttendanceServiceImpl implements AttendanceService {
         // Check-out using helper method
         try {
             attendance.checkOut(); // USE HELPER METHOD - sets checkOutTime
-            Enrollment enrollment = enrollmentRepository.findByStudentIdAndActivityId(student.getStudentId(), activity.getActivityId())
-                    .orElseThrow(() -> new BusinessException(ErrorCode.STUDENT_NOT_ENROLLED));
 
-            // Update a student's CTXH days based on activity's CTXH hours
+            // Get enrollment
+            Enrollment enrollment = enrollmentRepository.findByStudentIdAndActivityId(
+                    student.getStudentId(),
+                    activity.getActivityId()
+            ).orElseThrow(() -> new BusinessException(ErrorCode.STUDENT_NOT_ENROLLED));
+
+            // Update student's CTXH days and mark enrollment as completed - USE HELPER METHOD
             enrollment.complete();
+            enrollmentRepository.save(enrollment);
+
+            // AUTO-GENERATE CERTIFICATE after successful checkout
+            try {
+                if (!certificateService.certificateExists(enrollment.getEnrollmentId())) {
+                    certificateService.generateCertificate(enrollment);
+                    log.info("Auto-generated certificate for student {} after checkout",
+                            student.getStudentId());
+                }
+            } catch (Exception e) {
+                log.warn("Failed to auto-generate certificate for enrollment {}: {}",
+                        enrollment.getEnrollmentId(), e.getMessage());
+                // Don't fail checkout if certificate generation fails
+            }
 
         } catch (IllegalStateException e) {
             if (e.getMessage().contains("already checked out")) {
