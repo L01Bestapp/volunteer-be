@@ -1,5 +1,6 @@
 package com.ctxh.volunteer.module.auth.entity;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -8,8 +9,9 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
+@RequiredArgsConstructor
 public class CustomUserDetails implements UserDetails {
-    private User user;
+    private transient User user;
 
     // implementation of UserDetails interface methods
 
@@ -49,6 +51,6 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return user.getIsActive() && user.getIsVerified();
+        return user.getIsVerified();
     }
 }

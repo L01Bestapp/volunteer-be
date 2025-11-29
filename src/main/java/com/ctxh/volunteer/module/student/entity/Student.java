@@ -119,7 +119,7 @@ public class Student extends BaseEntity {
     /**
      * Update CTXH hours
      */
-    public void updateCtxhDays(int days) {
+    public void updateCtxhDays(double days) {
         if (days > 0) {
             this.totalCtxhDays += days;
         }

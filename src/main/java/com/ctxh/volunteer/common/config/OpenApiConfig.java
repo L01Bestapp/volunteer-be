@@ -47,6 +47,14 @@ public class OpenApiConfig {
     }
 
     @Bean
+    public GroupedOpenApi activityOpenApi() {
+        return GroupedOpenApi.builder()
+                .group("activities")
+                .pathsToMatch("/api/v1/activities/**")
+                .build();
+    }
+
+    @Bean
     public GroupedOpenApi authOpenApi() {
         return GroupedOpenApi.builder()
                 .group("auth")

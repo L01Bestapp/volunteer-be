@@ -31,7 +31,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -64,8 +63,8 @@ public class Activity extends BaseEntity {
     private Organization organization;
 
     // ============ BASIC INFORMATION ============
-    @Column(name = "name", nullable = false, length = 200)
-    private String name;
+    @Column(name = "title", nullable = false, length = 200)
+    private String title;
 
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
@@ -117,7 +116,7 @@ public class Activity extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     @Builder.Default
-    private ActivityStatus status = ActivityStatus.DRAFT;
+    private ActivityStatus status = ActivityStatus.OPEN;
 
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
@@ -127,7 +126,8 @@ public class Activity extends BaseEntity {
     private String requirements;
 
     // ============ BENEFITS & REWARDS ============
-    private Integer benefitsCtxh;
+    @Column(name = "benefits_ctxh", nullable = false)
+    private Double benefitsCtxh;
 
     // ============ RELATIONSHIPS ============
 

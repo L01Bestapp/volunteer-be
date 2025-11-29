@@ -52,10 +52,6 @@ public class User extends BaseEntity {
     @ManyToMany
     private List<Role> roles;
 
-    @Column(name = "is_active", nullable = false)
-    @Builder.Default
-    private Boolean isActive = true;
-
     @Column(name = "is_verified", nullable = false)
     @Builder.Default
     private Boolean isVerified = false;
@@ -220,20 +216,6 @@ public class User extends BaseEntity {
         this.isLocked = false;
         this.lockedUntil = null;
         this.failedLoginAttempts = 0;
-    }
-
-    /**
-     * Deactivate account
-     */
-    public void deactivate() {
-        this.isActive = false;
-    }
-
-    /**
-     * Activate account
-     */
-    public void activate() {
-        this.isActive = true;
     }
 
     @Override
