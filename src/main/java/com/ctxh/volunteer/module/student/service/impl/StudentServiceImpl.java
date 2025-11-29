@@ -55,10 +55,10 @@ public class StudentServiceImpl implements StudentService {
                 .totalCtxhDays(0.0)
                 .build();
 
-        student.generateQrCode();
         user.setStudent(student);
         userRepository.save(user);
-        Student savedStudent = user.getStudent();
+        student.generateQrCode();
+        Student savedStudent = studentRepository.save(student);
         log.info("Created student with ID: {}", savedStudent.getStudentId());
 
         return mapToStudentResponseDto(savedStudent);

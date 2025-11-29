@@ -95,6 +95,5 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
             @Param("studentId") Long studentId
     );
 
-    long countByActivityAndStatus(Activity activity, EnrollmentStatus status);
-
+    Long countByActivityAndStatus(Activity activity, EnrollmentStatus status);
 }

@@ -2,6 +2,7 @@ package com.ctxh.volunteer.module.attendance.entity;
 
 import com.ctxh.volunteer.module.activity.entity.Activity;
 import com.ctxh.volunteer.common.entity.BaseEntity;
+import com.ctxh.volunteer.module.attendance.enums.AttendanceStatus;
 import com.ctxh.volunteer.module.student.entity.Student;
 import io.hypersistence.utils.hibernate.id.Tsid;
 import jakarta.persistence.Column;
@@ -60,6 +61,9 @@ public class Attendance extends BaseEntity {
     private Activity activity;
 
     // ============ DATE & TIME ============
+    @Column(name = "attendance_date", nullable = false)
+    private LocalDateTime attendanceDate;
+
     @Column(name = "check_in_time")
     private LocalDateTime checkInTime;
 
@@ -74,28 +78,59 @@ public class Attendance extends BaseEntity {
 
     // ============ ENUMS ============
 
-    /**
-     * Attendance Status enum
-     */
-    public enum AttendanceStatus {
-        PRESENT,        // Có mặt
-        ABSENT        // Vắng mặt
-    }
 
     // ============ HELPER METHODS ============
 
     /**
-     * Check-in
+     * Check-in student
      */
     public void checkIn() {
+        if (this.checkInTime != null) {
+            throw new IllegalStateException("Student has already checked in");
+        }
         this.checkInTime = LocalDateTime.now();
+        this.status = AttendanceStatus.PRESENT;
     }
 
     /**
-     * Check-out
+     * Check-out student
      */
     public void checkOut() {
+        if (this.checkInTime == null) {
+            throw new IllegalStateException("Student must check in before checking out");
+        }
+        if (this.checkOutTime != null) {
+            throw new IllegalStateException("Student has already checked out");
+        }
         this.checkOutTime = LocalDateTime.now();
+    }
+
+    /**
+     * Check if student has checked in
+     */
+    public boolean hasCheckedIn() {
+        return this.checkInTime != null;
+    }
+
+    /**
+     * Check if student has checked out
+     */
+    public boolean hasCheckedOut() {
+        return this.checkOutTime != null;
+    }
+
+    /**
+     * Check if attendance is complete (both check-in and check-out)
+     */
+    public boolean isComplete() {
+        return this.checkInTime != null && this.checkOutTime != null;
+    }
+
+    /**
+     * Mark as present (for manual marking)
+     */
+    public void markAsPresent() {
+        this.status = AttendanceStatus.PRESENT;
     }
 
     /**
@@ -113,6 +148,13 @@ public class Attendance extends BaseEntity {
             return null;
         }
         return Duration.between(checkInTime, checkOutTime).toMinutes();
+    }
+
+    /**
+     * Check if student is present (checked in)
+     */
+    public boolean isPresent() {
+        return this.status == AttendanceStatus.PRESENT;
     }
 
     @Override
