@@ -1,0 +1,277 @@
+package com.ctxh.volunteer.module.student.service.impl;
+
+import com.ctxh.volunteer.common.exception.BusinessException;
+import com.ctxh.volunteer.common.exception.ErrorCode;
+import com.ctxh.volunteer.module.student.dto.request.CreateStudentRequestDto;
+import com.ctxh.volunteer.module.student.dto.request.UpdateStudentRequestDto;
+import com.ctxh.volunteer.module.student.dto.response.StudentListResponseDto;
+import com.ctxh.volunteer.module.student.dto.response.StudentResponseDto;
+import com.ctxh.volunteer.module.student.entity.Student;
+import com.ctxh.volunteer.module.student.enums.Gender;
+import com.ctxh.volunteer.module.student.repository.StudentRepository;
+import com.ctxh.volunteer.module.student.service.StudentService;
+import com.ctxh.volunteer.module.user.entity.User;
+import com.ctxh.volunteer.module.user.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class StudentServiceImpl implements StudentService {
+
+    private final StudentRepository studentRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final static String DEFAULT_AVATAR_URL = "https://example.com/default-avatar.png";
+    private final UserRepository userRepository;
+
+    @Override
+    public StudentResponseDto registerStudent(CreateStudentRequestDto requestDto) {
+        // Validate MSSV uniqueness
+        if (studentRepository.existsByMssv(requestDto.getMssv())) {
+            throw new BusinessException(ErrorCode.MSSV_ALREADY_EXISTS);
+        }
+
+        User user = User.builder()
+                .email(requestDto.getEmail())
+                .password(passwordEncoder.encode(requestDto.getPassword()))
+                .build();
+
+        // Create student
+        Student student = Student.builder()
+                .user(user)
+                .fullName(requestDto.getFullName())
+                .mssv(requestDto.getMssv())
+                .gender(Gender.valueOf(requestDto.getGender()))
+                .avatarUrl(DEFAULT_AVATAR_URL)
+                .totalCtxhDays(0.0)
+                .build();
+
+        user.setStudent(student);
+        userRepository.save(user);
+        Student savedStudent = user.getStudent();
+        log.info("Created student with ID: {}", savedStudent.getStudentId());
+
+        return mapToStudentResponseDto(savedStudent);
+    }
+
+//    // ============ STUDENT CRUD OPERATIONS ============
+//
+//    @Override
+//    @Transactional(readOnly = true)
+//    public StudentResponseDto getStudentById(Long studentId) {
+//        Student student = studentRepository.findById(studentId)
+//                .orElseThrow(() -> new BusinessException(ErrorCode.STUDENT_NOT_FOUND));
+//        return mapToStudentResponseDto(student);
+//    }
+//
+//    @Override
+//    @Transactional(readOnly = true)
+//    public StudentResponseDto getStudentByMssv(String mssv) {
+//        Student student = studentRepository.findByMssv(mssv)
+//                .orElseThrow(() -> new BusinessException(ErrorCode.STUDENT_NOT_FOUND));
+//        return mapToStudentResponseDto(student);
+//    }
+//
+//    @Override
+//    @Transactional
+//    public StudentResponseDto createStudent(CreateStudentRequestDto requestDto) {
+//        // Validate MSSV uniqueness
+//        if (studentRepository.existsByMssv(requestDto.getMssv())) {
+//            throw new BusinessException(ErrorCode.MSSV_ALREADY_EXISTS);
+//        }
+//
+//        // Validate user doesn't already have a student profile
+//        if (studentRepository.existsByUser_UserId(requestDto.getUserId())) {
+//            throw new BusinessException(ErrorCode.USER_ALREADY_EXISTS);
+//        }
+//
+//        // Create User reference (assuming User exists)
+//        User user = new User();
+//        user.setUserId(requestDto.getUserId());
+//
+//        // Create student
+//        Student student = Student.builder()
+//                .user(user)
+//                .fullName(requestDto.getFullName())
+//                .mssv(requestDto.getMssv())
+//                .academicYear(requestDto.getAcademicYear())
+//                .faculty(requestDto.getFaculty())
+//                .dateOfBirth(requestDto.getDateOfBirth())
+//                .gender(requestDto.getGender())
+//                .avatarUrl(requestDto.getAvatarUrl())
+//                .bio(requestDto.getBio())
+//                .totalCtxhDays(0.0)
+//                .build();
+//
+//        // Generate QR code
+//        student.generateQrCode();
+//
+//        Student savedStudent = studentRepository.save(student);
+//        log.info("Created student with ID: {}", savedStudent.getStudentId());
+//
+//        return mapToStudentResponseDto(savedStudent);
+//    }
+//
+//    @Override
+//    @Transactional
+//    public StudentResponseDto updateStudent(Long studentId, UpdateStudentRequestDto requestDto) {
+//        Student student = studentRepository.findById(studentId)
+//                .orElseThrow(() -> new BusinessException(ErrorCode.STUDENT_NOT_FOUND));
+//
+//        // Update fields if provided
+//        if (requestDto.getFullName() != null) {
+//            student.setFullName(requestDto.getFullName());
+//        }
+//        if (requestDto.getMssv() != null) {
+//            // Check if new MSSV is already taken by another student
+//            if (!requestDto.getMssv().equals(student.getMssv()) &&
+//                    studentRepository.existsByMssv(requestDto.getMssv())) {
+//                throw new BusinessException(ErrorCode.MSSV_ALREADY_EXISTS);
+//            }
+//            student.setMssv(requestDto.getMssv());
+//        }
+//        if (requestDto.getAcademicYear() != null) {
+//            student.setAcademicYear(requestDto.getAcademicYear());
+//        }
+//        if (requestDto.getFaculty() != null) {
+//            student.setFaculty(requestDto.getFaculty());
+//        }
+//        if (requestDto.getDateOfBirth() != null) {
+//            student.setDateOfBirth(requestDto.getDateOfBirth());
+//        }
+//        if (requestDto.getGender() != null) {
+//            student.setGender(requestDto.getGender());
+//        }
+//        if (requestDto.getAvatarUrl() != null) {
+//            student.setAvatarUrl(requestDto.getAvatarUrl());
+//        }
+//        if (requestDto.getBio() != null) {
+//            student.setBio(requestDto.getBio());
+//        }
+//
+//        Student updatedStudent = studentRepository.save(student);
+//        log.info("Updated student with ID: {}", studentId);
+//
+//        return mapToStudentResponseDto(updatedStudent);
+//    }
+//
+//    @Override
+//    @Transactional
+//    public void deleteStudent(Long studentId) {
+//        if (!studentRepository.existsById(studentId)) {
+//            throw new BusinessException(ErrorCode.STUDENT_NOT_FOUND);
+//        }
+//        studentRepository.deleteById(studentId);
+//        log.info("Deleted student with ID: {}", studentId);
+//    }
+//
+//    @Override
+//    @Transactional(readOnly = true)
+//    public Page<StudentListResponseDto> getAllStudents(Pageable pageable) {
+//        return studentRepository.findAll(pageable)
+//                .map(this::mapToStudentListResponseDto);
+//    }
+//
+//    @Override
+//    @Transactional(readOnly = true)
+//    public Page<StudentListResponseDto> searchStudents(String keyword, Pageable pageable) {
+//        return studentRepository.searchStudents(keyword, pageable)
+//                .map(this::mapToStudentListResponseDto);
+//    }
+//
+//    @Override
+//    @Transactional(readOnly = true)
+//    public Page<StudentListResponseDto> getStudentsByFaculty(String faculty, Pageable pageable) {
+//        return studentRepository.findByFacultyContainingIgnoreCase(faculty, pageable)
+//                .map(this::mapToStudentListResponseDto);
+//    }
+//
+//    @Override
+//    @Transactional(readOnly = true)
+//    public Page<StudentListResponseDto> getStudentsByAcademicYear(String academicYear, Pageable pageable) {
+//        return studentRepository.findByAcademicYear(academicYear, pageable)
+//                .map(this::mapToStudentListResponseDto);
+//    }
+//
+//    @Override
+//    @Transactional
+//    public StudentResponseDto generateQrCode(Long studentId) {
+//        Student student = studentRepository.findById(studentId)
+//                .orElseThrow(() -> new BusinessException(ErrorCode.STUDENT_NOT_FOUND));
+//
+//        student.generateQrCode();
+//        Student updatedStudent = studentRepository.save(student);
+//        log.info("Generated QR code for student with ID: {}", studentId);
+//
+//        return mapToStudentResponseDto(updatedStudent);
+//    }
+//
+//    @Override
+//    @Transactional(readOnly = true)
+//    public StudentResponseDto getStudentByQrCode(String qrCodeData) {
+//        Student student = studentRepository.findByQrCodeData(qrCodeData)
+//                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_QR_CODE));
+//
+//        // Check if QR code is expired
+//        if (student.isQrCodeExpired()) {
+//            throw new BusinessException(ErrorCode.QR_CODE_EXPIRED);
+//        }
+//
+//        return mapToStudentResponseDto(student);
+//    }
+//
+//    @Override
+//    @Transactional
+//    public StudentResponseDto updateCtxhDays(Long studentId, Double days) {
+//        Student student = studentRepository.findById(studentId)
+//                .orElseThrow(() -> new BusinessException(ErrorCode.STUDENT_NOT_FOUND));
+//
+//        student.setTotalCtxhDays(student.getTotalCtxhDays() + days);
+//        Student updatedStudent = studentRepository.save(student);
+//        log.info("Updated CTXH days for student with ID: {}. New total: {}",
+//                studentId, updatedStudent.getTotalCtxhDays());
+//
+//        return mapToStudentResponseDto(updatedStudent);
+//    }
+//
+//    // ============ MAPPING METHODS ============
+//
+    private StudentResponseDto mapToStudentResponseDto(Student student) {
+        return StudentResponseDto.builder()
+                .studentId(student.getStudentId())
+                .phoneNumber(student.getUser().getPhoneNumber())
+                .email(student.getUser().getEmail())
+                .fullName(student.getFullName())
+                .mssv(student.getMssv())
+                .academicYear(student.getAcademicYear())
+                .faculty(student.getFaculty())
+                .totalCtxhDays(student.getTotalCtxhDays())
+                .dateOfBirth(student.getDateOfBirth())
+                .gender(student.getGender())
+                .avatarUrl(student.getAvatarUrl())
+                .bio(student.getBio())
+                .qrCodeData(student.getQrCodeData())
+                .qrCodeGeneratedAt(student.getQrCodeGeneratedAt())
+                .createdAt(student.getCreateAt())
+                .updatedAt(student.getUpdateAt())
+                .build();
+    }
+//
+//    private StudentListResponseDto mapToStudentListResponseDto(Student student) {
+//        return StudentListResponseDto.builder()
+//                .studentId(student.getStudentId())
+//                .fullName(student.getFullName())
+//                .mssv(student.getMssv())
+//                .faculty(student.getFaculty())
+//                .totalCtxhDays(student.getTotalCtxhDays())
+//                .gender(student.getGender())
+//                .avatarUrl(student.getAvatarUrl())
+//                .build();
+//    }
+}
