@@ -36,8 +36,6 @@ public class CreateActivityRequestDto {
     @Future(message = "End date time must be in the future")
     private LocalDateTime endDateTime;
 
-    private LocalDateTime registrationOpensAt;
-
     @Future(message = "Registration deadline must be in the future")
     private LocalDateTime registrationDeadline;
 

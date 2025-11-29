@@ -60,6 +60,40 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
             @Param("activityId") Long activityId
     );
 
+    /**
+     * Find all enrollments by student ID
+     */
+    @Query("SELECT e FROM Enrollment e " +
+            "JOIN FETCH e.activity a " +
+            "JOIN FETCH a.organization " +
+            "WHERE e.student.studentId = :studentId " +
+            "ORDER BY e.appliedAt DESC")
+    List<Enrollment> findByStudentId(@Param("studentId") Long studentId);
+
+    /**
+     * Find all enrollments by student ID and status
+     */
+    @Query("SELECT e FROM Enrollment e " +
+            "JOIN FETCH e.activity a " +
+            "JOIN FETCH a.organization " +
+            "WHERE e.student.studentId = :studentId " +
+            "AND e.status = :status " +
+            "ORDER BY e.appliedAt DESC")
+    List<Enrollment> findByStudentIdAndStatus(
+            @Param("studentId") Long studentId,
+            @Param("status") EnrollmentStatus status
+    );
+
+    /**
+     * Find enrollment by ID and student ID (for authorization)
+     */
+    @Query("SELECT e FROM Enrollment e " +
+            "WHERE e.enrollmentId = :enrollmentId " +
+            "AND e.student.studentId = :studentId")
+    Optional<Enrollment> findByIdAndStudentId(
+            @Param("enrollmentId") Long enrollmentId,
+            @Param("studentId") Long studentId
+    );
 
     long countByActivityAndStatus(Activity activity, EnrollmentStatus status);
 

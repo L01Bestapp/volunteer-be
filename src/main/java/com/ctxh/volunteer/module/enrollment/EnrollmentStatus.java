@@ -4,4 +4,5 @@ public enum EnrollmentStatus {
     PENDING,    // Chờ duyệt
     APPROVED,   // Đã duyệt
     REJECTED,   // Bị từ chối
+    COMPLETED,  // Hoàn thành
 }

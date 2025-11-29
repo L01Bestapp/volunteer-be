@@ -51,7 +51,9 @@ public class ActivityServiceImpl implements ActivityService {
             throw new BusinessException(ErrorCode.INVALID_ACTIVITY_DATE);
         }
 
-        if (requestDto.getRegistrationDeadline().isBefore(requestDto.getRegistrationOpensAt())) {
+        LocalDateTime registrationOpensAt = LocalDateTime.now();
+
+        if (requestDto.getRegistrationDeadline().isBefore(registrationOpensAt)) {
             throw new BusinessException(ErrorCode.INVALID_REGISTRATION_DEADLINE);
         }
 
@@ -64,7 +66,7 @@ public class ActivityServiceImpl implements ActivityService {
                 .category(requestDto.getCategory() != null ? ActivityCategory.valueOf(requestDto.getCategory()) : null)
                 .startDateTime(requestDto.getStartDateTime())
                 .endDateTime(requestDto.getEndDateTime())
-                .registrationOpensAt(requestDto.getRegistrationOpensAt())
+                .registrationOpensAt(registrationOpensAt)
                 .registrationDeadline(requestDto.getRegistrationDeadline())
                 .address(requestDto.getAddress())
                 .maxParticipants(requestDto.getMaxParticipants())
@@ -135,9 +137,6 @@ public class ActivityServiceImpl implements ActivityService {
         }
         if (requestDto.getEndDateTime() != null) {
             activity.setEndDateTime(requestDto.getEndDateTime());
-        }
-        if (requestDto.getRegistrationOpensAt() != null) {
-            activity.setRegistrationOpensAt(requestDto.getRegistrationOpensAt());
         }
         if (requestDto.getRegistrationDeadline() != null) {
             activity.setRegistrationDeadline(requestDto.getRegistrationDeadline());

@@ -84,7 +84,8 @@ public class Activity extends BaseEntity {
     private LocalDateTime endDateTime;
 
     @Column(name = "registration_opens_at")
-    private LocalDateTime registrationOpensAt;
+    @Builder.Default
+    private LocalDateTime registrationOpensAt = LocalDateTime.now();
 
     @Column(name = "registration_deadline")
     private LocalDateTime registrationDeadline;
@@ -153,17 +154,17 @@ public class Activity extends BaseEntity {
     public boolean canRegister() {
         // Nếu activity không mở đăng ký thì thôi
         if (status != ActivityStatus.OPEN) {
-            return false;
+            throw new BusinessException(ErrorCode.ACTIVITY_NOT_OPEN_FOR_ENROLLMENT);
         }
 
         // Hết hạn đăng ký
         if (isRegistrationDeadlinePassed()) {
-            return false;
+            throw new BusinessException(ErrorCode.ACTIVITY_REGISTRATION_DEADLINE_PASSED);
         }
 
         // ĐÃ ĐỦ NGƯỜI ĐƯỢC DUYỆT -> KHÔNG CHO ĐĂNG KÝ THÊM
         if (approvedParticipants >= maxParticipants) {
-            return false;
+            throw new BusinessException(ErrorCode.ACTIVITY_FULL);
         }
 
         // Chưa đến ngày mở đăng ký
@@ -203,20 +204,6 @@ public class Activity extends BaseEntity {
 
         if (maxParticipants != null && approvedParticipants >= maxParticipants) {
             this.status = ActivityStatus.FULL;
-        }
-    }
-
-    /**
-     * Decrement participants
-     */
-    public void decrementParticipants() {
-        if (this.approvedParticipants > 0) {
-            this.approvedParticipants--;
-            this.currentParticipants--;
-        }
-
-        if (this.status == ActivityStatus.FULL && hasAvailableSlots()) {
-            this.status = ActivityStatus.OPEN;
         }
     }
 
@@ -297,8 +284,7 @@ public class Activity extends BaseEntity {
      * Check if the registration deadline passed
      */
     public boolean isRegistrationDeadlinePassed() {
-        return registrationDeadline != null &&
-                LocalDateTime.now().isAfter(registrationDeadline);
+        return registrationDeadline != null && LocalDateTime.now().isAfter(registrationDeadline);
     }
 
     /**

@@ -67,6 +67,9 @@ public enum ErrorCode {
     NOT_ACTIVITY_OWNER(1509, "You are not the owner of this activity", HttpStatus.FORBIDDEN),
     ACTIVITY_CANNOT_REGISTER(1510, "Cannot register for this activity", HttpStatus.BAD_REQUEST),
     INVALID_REGISTRATION_DEADLINE(1511, "Invalid registration deadline", HttpStatus.BAD_REQUEST),
+    ACTIVITY_NOT_OPEN_FOR_ENROLLMENT(1512, "Activity is not open for enrollment", HttpStatus.BAD_REQUEST),
+    ACTIVITY_REGISTRATION_DEADLINE_PASSED(1513, "Activity registration deadline has passed", HttpStatus.BAD_REQUEST),
+    ACTIVITY_MAX_PENDING_REACHED(1514, "Activity has reached maximum pending enrollments", HttpStatus.BAD_REQUEST),
 
     // ============ ENROLLMENT ERRORS (1600-1699) ============
     ENROLLMENT_NOT_FOUND(1600, "Enrollment not found", HttpStatus.NOT_FOUND),

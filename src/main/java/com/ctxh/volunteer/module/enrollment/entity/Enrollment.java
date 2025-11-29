@@ -156,8 +156,7 @@ public class Enrollment extends BaseEntity {
             return false;
         }
 
-        return status == EnrollmentStatus.APPROVED ||
-                status == EnrollmentStatus.PENDING;
+        return status == EnrollmentStatus.PENDING;
     }
 
     @PrePersist
