@@ -2,19 +2,12 @@ package com.ctxh.volunteer.module.activity.enums;
 
 
 public enum ActivityCategory {
-    EDUCATION,          // Giáo dục
-    HEALTHCARE,         // Y tế
-    ENVIRONMENT,        // Môi trường
-    COMMUNITY,          // Cộng đồng
-    CULTURE,            // Văn hóa
-    SPORTS,             // Thể thao
-    TECHNOLOGY,         // Công nghệ
-    SOCIAL_WELFARE,     // Phúc lợi xã hội
-    DISASTER_RELIEF,    // Cứu trợ thiên tai
-    ANIMAL_WELFARE,     // Phúc lợi động vật
-    ELDERLY_CARE,       // Chăm sóc người cao tuổi
-    CHILDREN,           // Trẻ em
-    DISABILITY_SUPPORT, // Hỗ trợ người khuyết tật
-    POVERTY_ALLEVIATION,// Xóa đói giảm nghèo
-    OTHER               // Khác
+    EDUCATION_SUPPORT,   // Dạy học, kèm cặp, hướng nghiệp
+    SOCIAL_SUPPORT,      // Thăm mái ấm, tặng quà, an sinh xã hội
+    COMMUNITY_SERVICE,   // Lao động công ích, chiến dịch tình nguyện, sửa chữa, xây dựng
+    ENVIRONMENT,         // Trồng cây, dọn rác, tái chế, ngày chủ nhật xanh
+    HEALTH_CAMPAIGN,     // Hiến máu, truyền thông sức khỏe
+    EVENT_SUPPORT,       // Hỗ trợ tổ chức sự kiện cộng đồng/nhà trường
+    FUNDRAISING,         // Quyên góp, gây quỹ
+    OTHER                // Khác
 }

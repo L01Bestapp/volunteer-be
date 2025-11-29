@@ -4,9 +4,12 @@ import com.ctxh.volunteer.module.activity.dto.request.CreateActivityRequestDto;
 import com.ctxh.volunteer.module.activity.dto.request.UpdateActivityRequestDto;
 import com.ctxh.volunteer.module.activity.dto.response.ActivityListResponseDto;
 import com.ctxh.volunteer.module.activity.dto.response.ActivityResponseDto;
+import com.ctxh.volunteer.module.activity.enums.ActivityCategory;
+import com.ctxh.volunteer.module.activity.enums.ActivityStatus;
 import com.ctxh.volunteer.module.enrollment.dto.EnrollmentResponseDto;
 import jakarta.validation.Valid;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface ActivityService {
@@ -72,4 +75,32 @@ public interface ActivityService {
      * Reject an enrollment
      */
     EnrollmentResponseDto rejectEnrollment(Long activityId, Long enrollmentId, Long rejectedByUserId);
+
+    // ============ STUDENT DISCOVERY APIs ============
+
+    /**
+     * Get all available activities (OPEN status, not past registration deadline)
+     */
+    List<ActivityListResponseDto> getAvailableActivities();
+
+    /**
+     * Simple search activities by keyword
+     */
+    List<ActivityListResponseDto> searchActivities(String keyword);
+
+    /**
+     * Get activity detail (similar to getActivityById but for students)
+     */
+    ActivityResponseDto getActivityDetail(Long activityId);
+
+    List<ActivityListResponseDto> searchActivitiesAdvanced(
+            String keyword,
+            ActivityCategory category,
+            ActivityStatus status,
+            LocalDate startDate,
+            LocalDate endDate);
+
+    /**
+     * Advanced search with filters
+     */
 }

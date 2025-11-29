@@ -17,9 +17,10 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ActivityListResponseDto {
     private Long activityId;
-    private String name;
+    private String title;
     private String shortDescription;
     private ActivityCategory category;
+    private Double theNumberOfCtxhDay;
     private LocalDateTime startDateTime;
     private LocalDateTime endDateTime;
     private String address;

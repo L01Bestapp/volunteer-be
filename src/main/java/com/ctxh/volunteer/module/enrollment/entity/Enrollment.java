@@ -2,6 +2,7 @@ package com.ctxh.volunteer.module.enrollment.entity;
 
 import com.ctxh.volunteer.module.activity.entity.Activity;
 import com.ctxh.volunteer.common.entity.BaseEntity;
+import com.ctxh.volunteer.module.enrollment.EnrollmentStatus;
 import com.ctxh.volunteer.module.student.entity.Student;
 import io.hypersistence.utils.hibernate.id.Tsid;
 import jakarta.persistence.Column;
@@ -95,16 +96,6 @@ public class Enrollment extends BaseEntity {
     @Column(name = "is_completed", nullable = false)
     @Builder.Default
     private Boolean isCompleted = false;
-
-    /**
-     * Enrollment Status enum
-     */
-    public enum EnrollmentStatus {
-        PENDING,    // Chờ duyệt
-        APPROVED,   // Đã duyệt
-        REJECTED,   // Bị từ chối
-    }
-
     // ============ HELPER METHODS ============
 
     /**
@@ -147,8 +138,8 @@ public class Enrollment extends BaseEntity {
         this.completedAt = LocalDateTime.now();
 
         // Update student's total CTXH hours
-        if (student != null && activity.getBenefitsCtxh() != null) {
-            student.updateCtxhDays(activity.getBenefitsCtxh());
+        if (student != null && activity.getTheNumberOfCtxhDay() != null) {
+            student.updateCtxhDays(activity.getTheNumberOfCtxhDay());
         }
     }
 

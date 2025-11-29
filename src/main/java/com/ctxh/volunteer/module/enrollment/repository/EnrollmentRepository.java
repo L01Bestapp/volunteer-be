@@ -1,7 +1,8 @@
 package com.ctxh.volunteer.module.enrollment.repository;
 
+import com.ctxh.volunteer.module.activity.entity.Activity;
+import com.ctxh.volunteer.module.enrollment.EnrollmentStatus;
 import com.ctxh.volunteer.module.enrollment.entity.Enrollment;
-import com.ctxh.volunteer.module.enrollment.entity.Enrollment.EnrollmentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -59,8 +60,7 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
             @Param("activityId") Long activityId
     );
 
-    /**
-     * Count enrollments by activity ID and status
-     */
-    long countByActivityIdAndStatus(Long activityId, EnrollmentStatus status);
+
+    long countByActivityAndStatus(Activity activity, EnrollmentStatus status);
+
 }

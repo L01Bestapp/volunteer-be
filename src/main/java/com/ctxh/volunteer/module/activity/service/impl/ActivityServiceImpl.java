@@ -11,20 +11,24 @@ import com.ctxh.volunteer.module.activity.enums.ActivityCategory;
 import com.ctxh.volunteer.module.activity.enums.ActivityStatus;
 import com.ctxh.volunteer.module.activity.repository.ActivityRepository;
 import com.ctxh.volunteer.module.activity.service.ActivityService;
+import com.ctxh.volunteer.module.activity.specification.ActivitySpecification;
+import com.ctxh.volunteer.module.enrollment.EnrollmentStatus;
 import com.ctxh.volunteer.module.enrollment.dto.EnrollmentResponseDto;
 import com.ctxh.volunteer.module.enrollment.entity.Enrollment;
-import com.ctxh.volunteer.module.enrollment.entity.Enrollment.EnrollmentStatus;
 import com.ctxh.volunteer.module.enrollment.repository.EnrollmentRepository;
 import com.ctxh.volunteer.module.organization.entity.Organization;
 import com.ctxh.volunteer.module.organization.repository.OrganizationRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -65,7 +69,7 @@ public class ActivityServiceImpl implements ActivityService {
                 .address(requestDto.getAddress())
                 .maxParticipants(requestDto.getMaxParticipants())
                 .requirements(requestDto.getRequirements())
-                .benefitsCtxh(requestDto.getBenefitsCtxh())
+                .theNumberOfCtxhDay(requestDto.getTheNumberOfCtxhDay())
                 .status(ActivityStatus.OPEN)
 
                 .build();
@@ -147,8 +151,8 @@ public class ActivityServiceImpl implements ActivityService {
         if (requestDto.getRequirements() != null) {
             activity.setRequirements(requestDto.getRequirements());
         }
-        if (requestDto.getBenefitsCtxh() != null) {
-            activity.setBenefitsCtxh(requestDto.getBenefitsCtxh());
+        if (requestDto.getTheNumberOfCtxhDay() != null) {
+            activity.setTheNumberOfCtxhDay(requestDto.getTheNumberOfCtxhDay());
         }
 
         // Validate dates if both are present
@@ -311,6 +315,61 @@ public class ActivityServiceImpl implements ActivityService {
         return mapToEnrollmentResponseDto(rejectedEnrollment);
     }
 
+    // ============ STUDENT DISCOVERY APIs ============
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ActivityListResponseDto> getAvailableActivities() {
+        List<Activity> activities = activityRepository.findAvailableActivities(LocalDateTime.now());
+        return activities.stream()
+                .map(this::mapToActivityListResponseDto)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ActivityListResponseDto> searchActivities(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return getAvailableActivities();
+        }
+
+        List<Activity> activities = activityRepository.searchByKeyword(keyword.trim());
+        return activities.stream()
+                .map(this::mapToActivityListResponseDto)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ActivityResponseDto getActivityDetail(Long activityId) {
+        // Same as getActivityById but for students
+        return getActivityById(activityId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ActivityListResponseDto> searchActivitiesAdvanced(
+            String keyword,
+            ActivityCategory category,
+            ActivityStatus status,
+            LocalDate startDate,
+            LocalDate endDate
+    ) {
+        // Build specification and execute query
+        Specification<Activity> spec = ActivitySpecification.searchActivities(
+                keyword,
+                category,
+                status,
+                startDate,
+                endDate
+        );
+
+        List<Activity> activities = activityRepository.findAll(spec);
+        return activities.stream()
+                .map(this::mapToActivityListResponseDto)
+                .toList();
+    }
+
     // ============ MAPPING METHODS ============
 
     private ActivityResponseDto mapToActivityResponseDto(Activity activity) {
@@ -334,7 +393,7 @@ public class ActivityServiceImpl implements ActivityService {
                 .remainingSlots(activity.getRemainingSlots())
                 .status(activity.getStatus())
                 .requirements(activity.getRequirements())
-                .benefitsCtxh(activity.getBenefitsCtxh())
+                .benefitsCtxh(activity.getTheNumberOfCtxhDay())
                 .createdAt(activity.getCreateAt())
                 .updatedAt(activity.getUpdateAt())
                 .build();
@@ -343,9 +402,10 @@ public class ActivityServiceImpl implements ActivityService {
     private ActivityListResponseDto mapToActivityListResponseDto(Activity activity) {
         return ActivityListResponseDto.builder()
                 .activityId(activity.getActivityId())
-                .name(activity.getTitle())
+                .title(activity.getTitle())
                 .shortDescription(activity.getShortDescription())
                 .category(activity.getCategory())
+                .theNumberOfCtxhDay(activity.getTheNumberOfCtxhDay())
                 .startDateTime(activity.getStartDateTime())
                 .endDateTime(activity.getEndDateTime())
                 .address(activity.getAddress())

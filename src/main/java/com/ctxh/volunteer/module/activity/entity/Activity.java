@@ -126,8 +126,8 @@ public class Activity extends BaseEntity {
     private String requirements;
 
     // ============ BENEFITS & REWARDS ============
-    @Column(name = "benefits_ctxh", nullable = false)
-    private Double benefitsCtxh;
+    @Column(name = "the_number_of_ctxh_day", nullable = false)
+    private Double theNumberOfCtxhDay;
 
     // ============ RELATIONSHIPS ============
 

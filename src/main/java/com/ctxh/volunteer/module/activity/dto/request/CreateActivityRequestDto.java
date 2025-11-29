@@ -50,7 +50,7 @@ public class CreateActivityRequestDto {
 
     private String requirements;
 
-    @NotNull(message = "benefitsCtxh is required")
-    @DecimalMin(value = "0.5", message = "benefitsCtxh must be at least 0.5")
-    private Double benefitsCtxh;
+    @NotNull(message = "the number of ctxh day is required")
+    @DecimalMin(value = "0.5", message = "the number of ctxh day must be at least 0.5")
+    private Double theNumberOfCtxhDay;
 }

@@ -1,6 +1,6 @@
 package com.ctxh.volunteer.module.enrollment.dto;
 
-import com.ctxh.volunteer.module.enrollment.entity.Enrollment.EnrollmentStatus;
+import com.ctxh.volunteer.module.enrollment.EnrollmentStatus;
 import com.ctxh.volunteer.module.student.enums.Gender;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

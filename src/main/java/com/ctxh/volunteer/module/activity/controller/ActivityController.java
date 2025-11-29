@@ -5,8 +5,11 @@ import com.ctxh.volunteer.module.activity.dto.request.CreateActivityRequestDto;
 import com.ctxh.volunteer.module.activity.dto.request.UpdateActivityRequestDto;
 import com.ctxh.volunteer.module.activity.dto.response.ActivityListResponseDto;
 import com.ctxh.volunteer.module.activity.dto.response.ActivityResponseDto;
+import com.ctxh.volunteer.module.activity.enums.ActivityCategory;
+import com.ctxh.volunteer.module.activity.enums.ActivityStatus;
 import com.ctxh.volunteer.module.activity.service.ActivityService;
 import com.ctxh.volunteer.module.enrollment.dto.EnrollmentResponseDto;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -22,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -35,6 +39,7 @@ public class ActivityController {
      * Create a new activity
      * POST /api/v1/activities
      */
+    @Operation(summary = "create a new activity", description = "Request body for creating a new activity")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<ActivityResponseDto> createActivity(
@@ -50,6 +55,7 @@ public class ActivityController {
      * Get all activities of an organization
      * GET /api/v1/activities?organizationId={organizationId}
      */
+    @Operation(summary = "get all activities of an organization")
     @GetMapping
     public ApiResponse<List<ActivityListResponseDto>> getActivitiesByOrganization(
             @RequestParam("organizationId") Long organizationId) {
@@ -63,6 +69,7 @@ public class ActivityController {
      * Get activity by ID
      * GET /api/v1/activities/{activityId}
      */
+    @Operation(summary = "get activity by ID")
     @GetMapping("/{activityId}")
     public ApiResponse<ActivityResponseDto> getActivityById(
             @PathVariable("activityId") Long activityId) {
@@ -76,6 +83,7 @@ public class ActivityController {
      * Update activity
      * PUT /api/v1/activities/{activityId}
      */
+    @Operation(summary = "update activity")
     @PutMapping("/{activityId}")
     public ApiResponse<ActivityResponseDto> updateActivity(
             @RequestParam("organizationId") Long organizationId,
@@ -91,6 +99,7 @@ public class ActivityController {
      * Delete activity
      * DELETE /api/v1/activities/{activityId}
      */
+    @Operation(summary = "delete activity")
     @DeleteMapping("/{activityId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public ApiResponse<Void> deleteActivity(
@@ -104,6 +113,7 @@ public class ActivityController {
      * Close activity registration
      * PATCH /api/v1/activities/{activityId}/close
      */
+    @Operation(summary = "close activity registration")
     @PatchMapping("/{activityId}/close")
     public ApiResponse<ActivityResponseDto> closeActivityRegistration(
             @RequestParam("organizationId") Long organizationId,
@@ -120,6 +130,7 @@ public class ActivityController {
      * Get all enrollments for an activity
      * GET /api/v1/activities/{activityId}/enrollments
      */
+    @Operation(summary = "get all enrollments for an activity")
     @GetMapping("/{activityId}/enrollments")
     public ApiResponse<List<EnrollmentResponseDto>> getActivityEnrollments(
             @PathVariable("activityId") Long activityId) {
@@ -133,6 +144,7 @@ public class ActivityController {
      * Get pending enrollments for an activity
      * GET /api/v1/activities/{activityId}/enrollments/pending
      */
+    @Operation(summary = "get pending enrollments for an activity")
     @GetMapping("/{activityId}/enrollments/pending")
     public ApiResponse<List<EnrollmentResponseDto>> getPendingEnrollments(
             @PathVariable("activityId") Long activityId) {
@@ -146,6 +158,7 @@ public class ActivityController {
      * Get approved enrollments for an activity
      * GET /api/v1/activities/{activityId}/enrollments/approved
      */
+    @Operation(summary = "get approved enrollments for an activity")
     @GetMapping("/{activityId}/enrollments/approved")
     public ApiResponse<List<EnrollmentResponseDto>> getApprovedEnrollments(
             @PathVariable("activityId") Long activityId) {
@@ -159,6 +172,7 @@ public class ActivityController {
      * Get rejected enrollments for an activity
      * GET /api/v1/activities/{activityId}/enrollments/rejected
      */
+    @Operation(summary = "get rejected enrollments for an activity")
     @GetMapping("/{activityId}/enrollments/rejected")
     public ApiResponse<List<EnrollmentResponseDto>> getRejectedEnrollments(
             @PathVariable("activityId") Long activityId) {
@@ -172,6 +186,7 @@ public class ActivityController {
      * Approve an enrollment
      * PATCH /api/v1/activities/{activityId}/enrollments/{enrollmentId}/approve
      */
+    @Operation(summary = "approve an enrollment")
     @PatchMapping("/{activityId}/enrollments/{enrollmentId}/approve")
     public ApiResponse<EnrollmentResponseDto> approveEnrollment(
             @PathVariable("activityId") Long activityId,
@@ -187,6 +202,7 @@ public class ActivityController {
      * Reject an enrollment
      * PATCH /api/v1/activities/{activityId}/enrollments/{enrollmentId}/reject
      */
+    @Operation(summary = "reject an enrollment")
     @PatchMapping("/{activityId}/enrollments/{enrollmentId}/reject")
     public ApiResponse<EnrollmentResponseDto> rejectEnrollment(
             @PathVariable("activityId") Long activityId,
@@ -195,6 +211,69 @@ public class ActivityController {
         return ApiResponse.ok(
                 "Enrollment rejected successfully",
                 activityService.rejectEnrollment(activityId, enrollmentId, rejectedByUserId)
+        );
+    }
+
+    // ============ STUDENT DISCOVERY APIs ============
+
+    /**
+     * Browse available activities
+     * GET /api/v1/activities/available
+     */
+    @Operation(summary = "get all available activities for students")
+    @GetMapping("/available")
+    public ApiResponse<List<ActivityListResponseDto>> getAvailableActivities() {
+        return ApiResponse.ok(
+                "Available activities retrieved successfully",
+                activityService.getAvailableActivities()
+        );
+    }
+
+    /**
+     * Simple search activities
+     * GET /api/v1/activities/search?keyword=...
+     */
+    @Operation(summary = "search activities by keyword")
+    @GetMapping("/search")
+    public ApiResponse<List<ActivityListResponseDto>> searchActivities(
+            @RequestParam(value = "keyword", required = false) String keyword) {
+        return ApiResponse.ok(
+                "Activities search completed successfully",
+                activityService.searchActivities(keyword)
+        );
+    }
+
+    /**
+     * Get activity detail
+     * GET /api/v1/activities/{activityId}/detail
+     */
+    @Operation(summary = "get activity detail for students")
+    @GetMapping("/{activityId}/detail")
+    public ApiResponse<ActivityResponseDto> getActivityDetail(
+            @PathVariable("activityId") Long activityId) {
+        return ApiResponse.ok(
+                "Activity detail retrieved successfully",
+                activityService.getActivityDetail(activityId)
+        );
+    }
+
+    /**
+     * Advanced search activities
+     * GET /api/v1/activities/searchAdvanced?keyword=...&category=...&status=...&startDate=...&endDate=...
+     */
+    @Operation(summary = "advanced search activities with filters")
+    @GetMapping("/searchAdvanced")
+    public ApiResponse<List<ActivityListResponseDto>> searchActivitiesAdvanced(
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "category", required = false) ActivityCategory category,
+            @RequestParam(value = "status", required = false) ActivityStatus status,
+            @RequestParam(value = "startDate", required = false) LocalDate startDate,
+            @RequestParam(value = "endDate", required = false) LocalDate endDate) {
+
+
+        return ApiResponse.ok(
+                "Advanced search completed successfully",
+                activityService.searchActivitiesAdvanced(keyword, category, status, startDate, endDate)
         );
     }
 }
