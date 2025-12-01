@@ -2,6 +2,9 @@ package com.ctxh.volunteer.module.organization.service.impl;
 
 import com.ctxh.volunteer.common.exception.BusinessException;
 import com.ctxh.volunteer.common.exception.ErrorCode;
+import com.ctxh.volunteer.module.auth.RoleEnum;
+import com.ctxh.volunteer.module.auth.entity.Role;
+import com.ctxh.volunteer.module.auth.repository.RoleRepository;
 import com.ctxh.volunteer.module.organization.dto.request.CreateOrganizationRequestDto;
 import com.ctxh.volunteer.module.organization.dto.request.UpdateOrganizationRequestDto;
 import com.ctxh.volunteer.module.organization.dto.response.OrganizationResponseDto;
@@ -16,6 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 import static com.ctxh.volunteer.common.util.AppConstants.DEFAULT_AVATAR_URL;
 
 @Slf4j
@@ -25,6 +30,7 @@ public class OrganizationServiceImpl implements OrganizationService {
     private final OrganizationRepository organizationRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
 
     @Override
     public OrganizationResponseDto registerOrganization(CreateOrganizationRequestDto requestDto) {
@@ -33,10 +39,15 @@ public class OrganizationServiceImpl implements OrganizationService {
             throw new BusinessException(ErrorCode.ORGANIZATION_NAME_ALREADY_EXISTS);
         }
 
+        Role role = roleRepository.findByRoleName(RoleEnum.ORGANIZATION.name()).orElseThrow(
+                () -> new BusinessException(ErrorCode.ROLE_NOT_FOUND)
+        );
+
         User user = User.builder()
                 .email(requestDto.getEmail())
                 .password(passwordEncoder.encode(requestDto.getPassword()))
                 .avatarUrl(DEFAULT_AVATAR_URL)
+                .roles(List.of(role))
                 .build();
 
         // Create an organization entity

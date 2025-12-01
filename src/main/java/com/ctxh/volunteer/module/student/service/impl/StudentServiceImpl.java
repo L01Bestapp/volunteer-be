@@ -4,12 +4,15 @@ import com.ctxh.volunteer.common.exception.BusinessException;
 import com.ctxh.volunteer.common.exception.ErrorCode;
 import com.ctxh.volunteer.module.attendance.entity.Attendance;
 import com.ctxh.volunteer.module.attendance.repository.AttendanceRepository;
+import com.ctxh.volunteer.module.auth.RoleEnum;
+import com.ctxh.volunteer.module.auth.entity.Role;
+import com.ctxh.volunteer.module.auth.repository.RoleRepository;
 import com.ctxh.volunteer.module.certificate.dto.CertificateResponseDto;
 import com.ctxh.volunteer.module.certificate.entity.Certificate;
 import com.ctxh.volunteer.module.certificate.repository.CertificateRepository;
 import com.ctxh.volunteer.module.enrollment.entity.Enrollment;
 import com.ctxh.volunteer.module.enrollment.repository.EnrollmentRepository;
-import com.ctxh.volunteer.module.student.dto.ParticipationHistoryDto;
+import com.ctxh.volunteer.module.student.dto.response.ParticipationHistoryDto;
 import com.ctxh.volunteer.module.student.dto.request.CreateStudentRequestDto;
 import com.ctxh.volunteer.module.student.dto.request.UpdateStudentRequestDto;
 import com.ctxh.volunteer.module.student.dto.response.StudentResponseDto;
@@ -43,6 +46,7 @@ public class StudentServiceImpl implements StudentService {
     private final EnrollmentRepository enrollmentRepository;
     private final AttendanceRepository attendanceRepository;
     private final CertificateRepository certificateRepository;
+    private final RoleRepository roleRepository;
 
     @Override
     public StudentResponseDto registerStudent(CreateStudentRequestDto requestDto) {
@@ -55,10 +59,15 @@ public class StudentServiceImpl implements StudentService {
             throw new BusinessException(ErrorCode.EMAIL_ALREADY_REGISTERED);
         }
 
+        Role role = roleRepository.findByRoleName(RoleEnum.STUDENT.name()).orElseThrow(
+                () -> new BusinessException(ErrorCode.ROLE_NOT_FOUND)
+        );
+
         User user = User.builder()
                 .email(requestDto.getEmail())
                 .password(passwordEncoder.encode(requestDto.getPassword()))
                 .avatarUrl(DEFAULT_AVATAR_URL)
+                .roles(List.of(role))
                 .build();
 
         // Create student
@@ -208,87 +217,7 @@ public class StudentServiceImpl implements StudentService {
     }
 
 
-    //    // ============ STUDENT CRUD OPERATIONS ============
 
-//    @Override
-//    @Transactional
-//    public void deleteStudent(Long studentId) {
-//        if (!studentRepository.existsById(studentId)) {
-//            throw new BusinessException(ErrorCode.STUDENT_NOT_FOUND);
-//        }
-//        studentRepository.deleteById(studentId);
-//        log.info("Deleted student with ID: {}", studentId);
-//    }
-//
-//    @Override
-//    @Transactional(readOnly = true)
-//    public Page<StudentListResponseDto> getAllStudents(Pageable pageable) {
-//        return studentRepository.findAll(pageable)
-//                .map(this::mapToStudentListResponseDto);
-//    }
-//
-//    @Override
-//    @Transactional(readOnly = true)
-//    public Page<StudentListResponseDto> searchStudents(String keyword, Pageable pageable) {
-//        return studentRepository.searchStudents(keyword, pageable)
-//                .map(this::mapToStudentListResponseDto);
-//    }
-//
-//    @Override
-//    @Transactional(readOnly = true)
-//    public Page<StudentListResponseDto> getStudentsByFaculty(String faculty, Pageable pageable) {
-//        return studentRepository.findByFacultyContainingIgnoreCase(faculty, pageable)
-//                .map(this::mapToStudentListResponseDto);
-//    }
-//
-//    @Override
-//    @Transactional(readOnly = true)
-//    public Page<StudentListResponseDto> getStudentsByAcademicYear(String academicYear, Pageable pageable) {
-//        return studentRepository.findByAcademicYear(academicYear, pageable)
-//                .map(this::mapToStudentListResponseDto);
-//    }
-//
-//    @Override
-//    @Transactional
-//    public StudentResponseDto generateQrCode(Long studentId) {
-//        Student student = studentRepository.findById(studentId)
-//                .orElseThrow(() -> new BusinessException(ErrorCode.STUDENT_NOT_FOUND));
-//
-//        student.generateQrCode();
-//        Student updatedStudent = studentRepository.save(student);
-//        log.info("Generated QR code for student with ID: {}", studentId);
-//
-//        return mapToStudentResponseDto(updatedStudent);
-//    }
-//
-//    @Override
-//    @Transactional(readOnly = true)
-//    public StudentResponseDto getStudentByQrCode(String qrCodeData) {
-//        Student student = studentRepository.findByQrCodeData(qrCodeData)
-//                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_QR_CODE));
-//
-//        // Check if QR code is expired
-//        if (student.isQrCodeExpired()) {
-//            throw new BusinessException(ErrorCode.QR_CODE_EXPIRED);
-//        }
-//
-//        return mapToStudentResponseDto(student);
-//    }
-//
-//    @Override
-//    @Transactional
-//    public StudentResponseDto updateCtxhDays(Long studentId, Double days) {
-//        Student student = studentRepository.findById(studentId)
-//                .orElseThrow(() -> new BusinessException(ErrorCode.STUDENT_NOT_FOUND));
-//
-//        student.setTotalCtxhDays(student.getTotalCtxhDays() + days);
-//        Student updatedStudent = studentRepository.save(student);
-//        log.info("Updated CTXH days for student with ID: {}. New total: {}",
-//                studentId, updatedStudent.getTotalCtxhDays());
-//
-//        return mapToStudentResponseDto(updatedStudent);
-//    }
-//
 //    // ============ MAPPING METHODS ============
 //
     private StudentResponseDto mapToStudentResponseDto(Student student) {
@@ -342,8 +271,8 @@ public class StudentServiceImpl implements StudentService {
                 .ctxhHours(certificate.getCtxhHours())
                 // Organization info (from certificate cache)
                 .organizationName(certificate.getOrganizationName())
-                .organizationAddress(certificate.getOrganizationAddress())
-                .organizationContact(certificate.getOrganizationContact())
+                .representativeName(certificate.getRepresentativeName())
+                .representativeEmail(certificate.getRepresentativeEmail())
                 // Enrollment info
                 .enrollmentId(certificate.getEnrollment().getEnrollmentId())
                 .completedAt(certificate.getEnrollment().getCompletedAt())
@@ -352,16 +281,4 @@ public class StudentServiceImpl implements StudentService {
                 .activityPeriodFormatted(activityPeriod)
                 .build();
     }
-//
-//    private StudentListResponseDto mapToStudentListResponseDto(Student student) {
-//        return StudentListResponseDto.builder()
-//                .studentId(student.getStudentId())
-//                .fullName(student.getFullName())
-//                .mssv(student.getMssv())
-//                .faculty(student.getFaculty())
-//                .totalCtxhDays(student.getTotalCtxhDays())
-//                .gender(student.getGender())
-//                .avatarUrl(student.getAvatarUrl())
-//                .build();
-//    }
 }

@@ -38,8 +38,8 @@ public class CertificateResponseDto {
 
     // Organization info (for certificate generation)
     private String organizationName;
-    private String organizationAddress;
-    private String organizationContact;
+    private String representativeName;
+    private String representativeEmail;
 
     // Enrollment info
     private Long enrollmentId;

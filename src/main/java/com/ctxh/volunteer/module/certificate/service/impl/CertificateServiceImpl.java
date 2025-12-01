@@ -24,13 +24,13 @@ public class CertificateServiceImpl implements CertificateService {
     @Override
     @Transactional
     public Certificate generateCertificate(Enrollment enrollment) {
-        // Check if certificate already exists
+        // Check if the certificate already exists
         if (certificateRepository.existsByEnrollment_EnrollmentId(enrollment.getEnrollmentId())) {
             throw new BusinessException(ErrorCode.CERTIFICATE_ALREADY_ISSUED);
         }
 
         // Verify enrollment is completed
-        if (!enrollment.getIsCompleted()) {
+        if (Boolean.FALSE.equals(enrollment.getIsCompleted())) {
             throw new BusinessException(ErrorCode.ENROLLMENT_NOT_APPROVED);
         }
 
@@ -56,8 +56,8 @@ public class CertificateServiceImpl implements CertificateService {
                 .ctxhHours(activity.getTheNumberOfCtxhDay())
                 // Cache organization info
                 .organizationName(organization.getOrganizationName())
-                .organizationAddress(organization.getAddress())
-                .organizationContact(organization.getContactEmail())
+                .representativeName(organization.getRepresentativeName())
+                .representativeEmail(organization.getRepresentativeEmail())
                 .build();
 
         // Issue certificate - USE HELPER METHOD

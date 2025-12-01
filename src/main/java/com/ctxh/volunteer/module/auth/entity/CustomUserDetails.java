@@ -1,6 +1,7 @@
 package com.ctxh.volunteer.module.auth.entity;
 
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -9,7 +10,8 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
-@RequiredArgsConstructor
+@Getter
+@AllArgsConstructor
 public class CustomUserDetails implements UserDetails {
     private transient User user;
 

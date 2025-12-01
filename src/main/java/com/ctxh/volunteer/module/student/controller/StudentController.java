@@ -2,7 +2,7 @@ package com.ctxh.volunteer.module.student.controller;
 
 import com.ctxh.volunteer.common.dto.ApiResponse;
 import com.ctxh.volunteer.module.certificate.dto.CertificateResponseDto;
-import com.ctxh.volunteer.module.student.dto.ParticipationHistoryDto;
+import com.ctxh.volunteer.module.student.dto.response.ParticipationHistoryDto;
 import com.ctxh.volunteer.module.student.dto.request.CreateStudentRequestDto;
 import com.ctxh.volunteer.module.student.dto.request.UpdateStudentRequestDto;
 import com.ctxh.volunteer.module.student.dto.response.StudentResponseDto;

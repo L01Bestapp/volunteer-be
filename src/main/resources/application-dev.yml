@@ -21,4 +21,39 @@ spring:
         physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
     show-sql: true
 
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            authorization-grant-type: authorization_code
+            scope: profile, email,openid
+            redirect-uri: ${OAUTH2_REDIRECT_URI:http://localhost:3000/oauth2/callback}
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_SENDER_USERNAME}
+    password: ${MAIL_SENDER_PASSWORD}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+    default-encoding: UTF-8
+
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME}
+  api-key: ${CLOUDINARY_API_KEY}
+  api-secret: ${CLOUDINARY_API_SECRET}
+
+
+jwt:
+  rsa-private-key: classpath:certs/privateKey.pem
+  rsa-public-key: classpath:certs/publicKey.pem
+  key-id: ${JWT_KEY_ID:ctxh-key}
+  expirationTime: ${EXP_TOKEN:604800} # 7 day in seconds
+  refreshExpTime: ${EXP_REFRESH_TOKEN:2592000} # 30 days in seconds
+
+base:
+  url: ${BASE_URL_WEBSITE:http://localhost:8080}

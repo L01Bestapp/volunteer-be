@@ -1,4 +1,4 @@
-package com.ctxh.volunteer.module.student.dto;
+package com.ctxh.volunteer.module.student.dto.response;
 
 import com.ctxh.volunteer.module.activity.enums.ActivityCategory;
 import com.ctxh.volunteer.module.enrollment.EnrollmentStatus;

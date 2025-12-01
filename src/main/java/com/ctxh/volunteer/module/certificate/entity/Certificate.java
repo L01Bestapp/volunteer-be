@@ -98,11 +98,11 @@ public class Certificate extends BaseEntity {
     @Column(name = "organization_name", nullable = false, length = 200)
     private String organizationName;
 
-    @Column(name = "organization_address", length = 500)
-    private String organizationAddress;
+    @Column(name = "representative_name", length = 100)
+    private String representativeName;
 
-    @Column(name = "organization_contact", length = 100)
-    private String organizationContact;
+    @Column(name = "representative_email", length = 100)
+    private String representativeEmail;
 
     // ============ STATUS ============
 

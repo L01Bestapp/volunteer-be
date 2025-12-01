@@ -1,10 +1,10 @@
 package com.ctxh.volunteer.module.student.entity;
 
-import com.ctxh.volunteer.module.attendance.entity.Attendance;
 import com.ctxh.volunteer.common.entity.BaseEntity;
+import com.ctxh.volunteer.module.attendance.entity.Attendance;
+import com.ctxh.volunteer.module.auth.entity.User;
 import com.ctxh.volunteer.module.enrollment.entity.Enrollment;
 import com.ctxh.volunteer.module.student.enums.Gender;
-import com.ctxh.volunteer.module.auth.entity.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.hypersistence.utils.hibernate.id.Tsid;
 import jakarta.persistence.*;
@@ -15,7 +15,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -126,16 +125,6 @@ public class Student extends BaseEntity {
     }
 
     /**
-     * Get CTXH completion percentage
-     */
-    public double getCtxhCompletionPercentage() {
-        if (totalCtxhDays == 0) {
-            return 0.0;
-        }
-        return Math.min(100.0, (totalCtxhDays * 100.0) / 15);
-    }
-
-    /**
      * Generate QR code data
      */
     public void generateQrCode() {
@@ -165,8 +154,7 @@ public class Student extends BaseEntity {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Student)) return false;
-        Student student = (Student) o;
+        if (!(o instanceof Student student)) return false;
         return studentId != null && studentId.equals(student.studentId);
     }
 

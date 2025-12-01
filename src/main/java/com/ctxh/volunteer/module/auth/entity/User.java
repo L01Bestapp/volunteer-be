@@ -20,6 +20,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -50,7 +52,8 @@ public class User extends BaseEntity {
     // ============ RELATIONSHIPS ============
 
     @ManyToMany
-    private List<Role> roles;
+    @Builder.Default
+    private List<Role> roles = new ArrayList<>();
 
     @Column(name = "is_verified", nullable = false)
     @Builder.Default
@@ -63,6 +66,13 @@ public class User extends BaseEntity {
     @Column(name = "failed_login_attempts")
     @Builder.Default
     private Integer failedLoginAttempts = 0;
+
+    private String refreshTokenUuid;
+
+    private Date refreshTokenExpiresAt;
+
+    private String provider;
+    private String providerId;
 
     @Column(name = "locked_until")
     private LocalDateTime lockedUntil;
@@ -95,7 +105,7 @@ public class User extends BaseEntity {
     // ============ BUSINESS HELPER METHODS ============
 
     /**
-     * Check if user is a student
+     * Check if the user is a student
      */
     public boolean isStudent() {
         return roles.stream().anyMatch(role -> role.getRoleName().equals("ROLE_STUDENT"))
@@ -103,7 +113,7 @@ public class User extends BaseEntity {
     }
 
     /**
-     * Check if user is an organization
+     * Check if the user is an organization
      */
     public boolean isOrganization() {
         return roles.stream().anyMatch(role -> role.getRoleName().equals("ROLE_ORGANIZATION"))
@@ -111,10 +121,18 @@ public class User extends BaseEntity {
     }
 
     /**
-     * Check if user is an admin
+     * Check if the user is an admin
      */
     public boolean isAdmin() {
         return roles.stream().anyMatch(role -> role.getRoleName().equals("ROLE_ADMIN"));
+    }
+
+    public void addRole(Role role) {
+        this.roles.add(role);
+    }
+
+    public void removeRole(Role role) {
+        this.roles.remove(role);
     }
 
     /**

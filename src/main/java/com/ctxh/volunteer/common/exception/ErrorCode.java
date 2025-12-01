@@ -17,6 +17,7 @@ public enum ErrorCode {
     CONFLICT(1006, "Resource conflict occurred", HttpStatus.CONFLICT),
     BAD_REQUEST(1007, "Bad request", HttpStatus.BAD_REQUEST),
     VALIDATION_ERROR(1008, "Validation error", HttpStatus.BAD_REQUEST),
+    UNAUTHENTICATED(1009, "User is not authenticated", HttpStatus.UNAUTHORIZED),
 
     // ============ AUTHENTICATION & AUTHORIZATION (1100-1199) ============
     INVALID_CREDENTIALS(1100, "Invalid email or password", HttpStatus.UNAUTHORIZED),
@@ -30,6 +31,9 @@ public enum ErrorCode {
     PASSWORD_RESET_TOKEN_EXPIRED(1108, "Password reset token has expired", HttpStatus.BAD_REQUEST),
     INVALID_PASSWORD_RESET_TOKEN(1109, "Invalid password reset token", HttpStatus.BAD_REQUEST),
     INSUFFICIENT_PERMISSIONS(1110, "Insufficient permissions", HttpStatus.FORBIDDEN),
+    TOKEN_GENERATION_FAILED(1111, "Failed to generate token", HttpStatus.INTERNAL_SERVER_ERROR),
+    BUILD_OAUTH2_URL_FAILED(1112, "Failed to build OAuth2 URL", HttpStatus.INTERNAL_SERVER_ERROR),
+
 
     // ============ USER ERRORS (1200-1299) ============
     USER_NOT_FOUND(1200, "User not found", HttpStatus.NOT_FOUND),
@@ -38,6 +42,9 @@ public enum ErrorCode {
     PHONE_ALREADY_REGISTERED(1203, "Phone number is already registered", HttpStatus.CONFLICT),
     INVALID_USER_TYPE(1204, "Invalid user type", HttpStatus.BAD_REQUEST),
     USER_CANNOT_BE_DELETED(1205, "User cannot be deleted", HttpStatus.BAD_REQUEST),
+    EMAIL_OR_PASSWORD_INCORRECT(1206, "Email or password is incorrect", HttpStatus.BAD_REQUEST),
+    NOT_EQUAL_PASSWORD(1207, "Password and confirm password do not match", HttpStatus.BAD_REQUEST),
+    ERROR_RESET_PASSWORD(1208, "Error occurred while resetting password", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // ============ STUDENT ERRORS (1300-1399) ============
     STUDENT_NOT_FOUND(1300, "Student not found", HttpStatus.NOT_FOUND),
@@ -120,8 +127,22 @@ public enum ErrorCode {
     SMS_SERVICE_ERROR(2101, "SMS service error", HttpStatus.INTERNAL_SERVER_ERROR),
     PAYMENT_SERVICE_ERROR(2102, "Payment service error", HttpStatus.INTERNAL_SERVER_ERROR),
     EXTERNAL_API_ERROR(2103, "External API error", HttpStatus.BAD_GATEWAY),
-    SERVICE_UNAVAILABLE(2104, "Service temporarily unavailable", HttpStatus.SERVICE_UNAVAILABLE);
+    SERVICE_UNAVAILABLE(2104, "Service temporarily unavailable", HttpStatus.SERVICE_UNAVAILABLE),
 
+
+    // ============ ROLE ERRORS (2200-2299) ============
+    ROLE_NOT_FOUND(2200, "Role not found", HttpStatus.NOT_FOUND),
+
+    // ============ EMAIL VERIFICATION ERRORS (2300-2399) ============
+    VERIFY_EMAIL_FAILED(2300, "Email verification failed", HttpStatus.INTERNAL_SERVER_ERROR),
+    USER_ALREADY_VERIFIED(2301, "User email is already verified", HttpStatus.BAD_REQUEST),
+
+    // ============ MAIL SENDING ERRORS (2400-2499) ============
+    MAIL_SENDING_FAILED(2400, "Failed to send email", HttpStatus.INTERNAL_SERVER_ERROR),
+    EMAIL_DOMAIN_NOT_ALLOWED(2401, "Email domain is not allowed", HttpStatus.BAD_REQUEST),
+    EMAIL_HAS_BEEN_REGISTERED(2402, "Email has already been registered", HttpStatus.CONFLICT),
+
+    FAILED_TO_UPLOAD_IMAGE(2500, "Failed to upload image", HttpStatus.BAD_REQUEST),
     ;
 
     private final int code;
