@@ -13,12 +13,12 @@ import com.ctxh.volunteer.module.auth.config.RSAKeyRecord;
 import com.ctxh.volunteer.module.auth.dto.request.CompleteProfile;
 import com.ctxh.volunteer.module.auth.dto.request.LoginRequest;
 import com.ctxh.volunteer.module.auth.dto.request.ResetPasswordRequest;
-import com.ctxh.volunteer.module.auth.dto.response.ExchangeTokenResponse;
+import com.ctxh.volunteer.module.auth.dto.request.VerifyOtpRequest;
 import com.ctxh.volunteer.module.auth.dto.response.GoogleSignInResponseDto;
 import com.ctxh.volunteer.module.auth.dto.response.TokenResponse;
+import com.ctxh.volunteer.module.auth.dto.response.VerifyOtpResponse;
 import com.ctxh.volunteer.module.auth.entity.Role;
 import com.ctxh.volunteer.module.auth.entity.User;
-import com.ctxh.volunteer.module.auth.enums.AttributeLoginType;
 import com.ctxh.volunteer.module.auth.enums.EmailTemplates;
 import com.ctxh.volunteer.module.auth.enums.PurposeToken;
 import com.ctxh.volunteer.module.auth.repository.RoleRepository;
@@ -44,17 +44,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.IOException;
@@ -63,11 +58,6 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
-
-import static com.ctxh.volunteer.common.util.AppConstants.CLIENT_ID;
-import static com.ctxh.volunteer.common.util.AppConstants.CLIENT_SECRET;
-import static com.ctxh.volunteer.common.util.AppConstants.REDIRECT_URI;
 
 @Slf4j
 @Service
@@ -155,7 +145,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public void forgotPassword(String email) {
         userRepository.findByEmail(email).ifPresent(
                 user -> {
@@ -165,17 +155,63 @@ public class AuthServiceImpl implements AuthService {
                     if (Boolean.FALSE.equals(user.getIsVerified())) {
                         throw new BusinessException(ErrorCode.ACCOUNT_DISABLED);
                     }
-                    String token = generateToken(user, PurposeToken.RESET_PASSWORD);
-                    String linkResetPassword = baseUrl + "/auth/reset-password?token=" + token;
+                    // Generate random 6-digit OTP code
+                    String otpCode = String.format("%06d", (int)(Math.random() * 1000000));
+
+                    // Save OTP to database using User entity method
+                    user.generatePasswordResetToken(otpCode);
+                    userRepository.save(user);
+
                     try {
-                        mailService.sendEmail(user.getEmail(), linkResetPassword,EmailTemplates.VERIFY_RESET_PASSWORD_TEMPLATE);
-                        log.info("Sent reset password email to {}", user.getEmail());
+                        mailService.sendEmail(user.getEmail(), otpCode, EmailTemplates.VERIFY_RESET_PASSWORD_TEMPLATE);
+                        log.info("Sent reset password OTP to {}", user.getEmail());
                     } catch (MessagingException | UnsupportedEncodingException e) {
                         log.error("Failed to send reset password email", e);
                         throw new BusinessException(ErrorCode.MAIL_SENDING_FAILED);
                     }
                 }
         );
+    }
+
+    @Override
+    @Transactional
+    public VerifyOtpResponse verifyOtp(VerifyOtpRequest request) {
+        log.info("Begin verify OTP for email: {}", request.getEmail());
+
+        User user = userRepository.findByEmail(request.getEmail()).orElseThrow(
+                () -> new BusinessException(ErrorCode.USER_NOT_FOUND)
+        );
+
+        if (Boolean.TRUE.equals(user.getIsLocked())) {
+            throw new BusinessException(ErrorCode.ACCOUNT_LOCKED);
+        }
+
+        if (Boolean.FALSE.equals(user.getIsVerified())) {
+            throw new BusinessException(ErrorCode.ACCOUNT_DISABLED);
+        }
+
+        // Verify OTP code and expiration
+        if (!user.isPasswordResetTokenValid()) {
+            throw new BusinessException(ErrorCode.TOKEN_EXPIRED);
+        }
+
+        if (!request.getOtpCode().equals(user.getResetPasswordToken())) {
+            throw new BusinessException(ErrorCode.TOKEN_INVALID);
+        }
+
+        // Generate reset password token (JWT)
+        String resetPasswordToken = generateToken(user, PurposeToken.RESET_PASSWORD);
+
+        // Clear OTP from database (one-time use)
+        user.setResetPasswordToken(null);
+        user.setResetPasswordTokenExpiresAt(null);
+        userRepository.save(user);
+
+        log.info("OTP verified successfully for email: {}", request.getEmail());
+
+        return VerifyOtpResponse.builder()
+                .resetPasswordToken(resetPasswordToken)
+                .build();
     }
 
     @Override
@@ -246,52 +282,6 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    @Transactional
-    public GoogleSignInResponseDto oauth2CallBack(String loginType, String code) {
-        // load client registration
-        ClientRegistration clientRegistration = clientRegistrationRepository.findByRegistrationId(loginType);
-        String accessToken = exchangeToken(loginType, code, clientRegistration);
-        log.info("tokenResponse: {}", accessToken);
-        Map<String, Object> userInfo = fetchUserInfo(accessToken, clientRegistration);
-
-        AttributeLoginType varName = AttributeLoginType.valueOf(loginType.toUpperCase());
-
-        log.info("userInfo: {}", userInfo.toString());
-        String providerId = userInfo.get(varName.getSub()).toString();
-        String email = userInfo.get("email") != null ? userInfo.get("email").toString() : loginType + "_" + providerId + "@dummy.com";
-        String fullName = userInfo.get("name") != null ? userInfo.get("name").toString() : null;
-        String avatarUrl = AppConstants.DEFAULT_AVATAR_URL;
-        if (loginType.equals("google")){
-            avatarUrl = userInfo.get("picture") != null ? userInfo.get("picture").toString() : AppConstants.DEFAULT_AVATAR_URL;
-        }
-
-        // onboard User
-        User user = userRepository.findByProviderAndProviderId(loginType, providerId).orElse(null);
-        if (user == null) {
-            Pattern pattern = Pattern.compile("^[A-Za-z0-9+_.-]+@hcmut\\.edu\\.vn$");
-            if (!pattern.matcher(email).matches()) {
-                throw new BusinessException(ErrorCode.EMAIL_DOMAIN_NOT_ALLOWED);
-            }
-            if (userRepository.findByEmail(email).isPresent()) {
-                throw new BusinessException(ErrorCode.EMAIL_HAS_BEEN_REGISTERED);
-            }
-            user = onBoardUserFromOauth2(email, fullName, avatarUrl, loginType, providerId);
-        }
-
-        // Here you would typically generate a JWT token or similar
-        String accessTokenResponse = generateToken(user, PurposeToken.ACCESS);
-        String refreshToken = generateToken(user, PurposeToken.REFRESH);
-
-        user.setFailedLoginAttempts(0);
-        return GoogleSignInResponseDto.builder()
-                .accessToken(accessTokenResponse)
-                .refreshToken(refreshToken)
-                .profileComplete(false)
-                .userId(user.getUserId())
-                .build();
-    }
-
-    @Override
     public void revokeToken(String uuidToken) {
         User user = userRepository.findByRefreshTokenUuid(uuidToken).orElseThrow(
                 () -> new BusinessException(ErrorCode.TOKEN_INVALID
@@ -353,7 +343,94 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
+    @Override
+    @Transactional
+    public GoogleSignInResponseDto verifyGoogleIdToken(String idToken) {
+        log.info("Begin verify Google ID token");
 
+        // 1. Verify ID Token với Google
+        Map<String, Object> googleUserInfo = verifyTokenWithGoogle(idToken);
+
+        // 2. Extract user info từ token payload
+        String email = (String) googleUserInfo.get("email");
+        String name = (String) googleUserInfo.get("name");
+        String picture = (String) googleUserInfo.get("picture");
+        String providerId = (String) googleUserInfo.get("sub");
+
+        // 3. Kiểm tra email có phải @hcmut.edu.vn không
+        if (!email.endsWith("@hcmut.edu.vn")) {
+            log.warn("Email {} is not from HCMUT domain", email);
+            throw new BusinessException(ErrorCode.EMAIL_DOMAIN_NOT_ALLOWED);
+        }
+
+        // 4. Kiểm tra user đã tồn tại chưa
+        User user = userRepository.findByEmail(email).orElse(null);
+
+        boolean isNewUser = false;
+        if (user == null) {
+            // Onboard user nếu chưa tồn tại
+            log.info("User with email {} does not exist, onboarding...", email);
+            user = onBoardUserFromOauth2(email, name, picture, "google", providerId);
+            isNewUser = true;
+        } else {
+            // Nếu user đã tồn tại nhưng chưa có providerId (đăng ký bằng email trước đó)
+            // thì cập nhật providerId
+            if (user.getProviderId() == null || user.getProviderId().isEmpty()) {
+                user.setProvider("google");
+                user.setProviderId(providerId);
+                userRepository.save(user);
+            }
+        }
+
+        // 5. Kiểm tra account status
+        if (Boolean.TRUE.equals(user.getIsLocked())) {
+            throw new BusinessException(ErrorCode.ACCOUNT_LOCKED);
+        }
+
+        // 6. Generate JWT tokens
+        String accessToken = generateToken(user, PurposeToken.ACCESS);
+        String refreshToken = generateToken(user, PurposeToken.REFRESH);
+
+        // 7. Update last login
+        user.recordSuccessfulLogin();
+        userRepository.save(user);
+
+        log.info("Google sign-in successful for user: {}", email);
+
+        // 8. Check if profile is complete (có MSSV chưa)
+        boolean profileComplete = user.getStudent() != null && user.getStudent().getMssv() != null;
+
+        return GoogleSignInResponseDto.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .userId(user.getUserId())
+                .profileComplete(profileComplete)
+                .build();
+    }
+
+    private Map<String, Object> verifyTokenWithGoogle(String idToken) {
+        try {
+            String googleTokenInfoUrl = "https://oauth2.googleapis.com/tokeninfo?id_token=" + idToken;
+
+            Map<String, Object> response = webClient.get()
+                    .uri(googleTokenInfoUrl)
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .block();
+
+            if (response == null || response.containsKey("error")) {
+                log.error("Invalid Google ID token");
+                throw new BusinessException(ErrorCode.TOKEN_INVALID);
+            }
+
+            return response;
+        } catch (Exception e) {
+            log.error("Failed to verify Google ID token", e);
+            throw new BusinessException(ErrorCode.TOKEN_INVALID);
+        }
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public User onBoardUserFromOauth2(String email, String fullName, String avatarUrl, String provider, String providerId) {
         Role role = roleRepository.findByRoleName(RoleEnum.STUDENT.name()).orElseThrow(
                 () -> new BusinessException(ErrorCode.ROLE_NOT_FOUND)
@@ -381,45 +458,6 @@ public class AuthServiceImpl implements AuthService {
         log.info("Created student with ID: {}", savedStudent.getStudentId());
 
         return user;
-    }
-
-    public String exchangeToken(String loginType, String code, ClientRegistration clientRegistration) {
-        String tokenUri = clientRegistration.getProviderDetails().getTokenUri();
-        String clientId = clientRegistration.getClientId();
-        String redirectUri = clientRegistration.getRedirectUri();
-        String clientSecret = clientRegistration.getClientSecret();
-
-        // Case 3: Google or others (POST + JSON response)
-        if ("google".equalsIgnoreCase(loginType)) {
-            MultiValueMap<String, String> linkedValues = new LinkedMultiValueMap<>();
-            linkedValues.add("code", code);
-            linkedValues.add(CLIENT_ID, clientId);
-            linkedValues.add(REDIRECT_URI, redirectUri);
-            linkedValues.add(CLIENT_SECRET, clientSecret);
-            linkedValues.add("grant_type", "authorization_code");
-
-            ExchangeTokenResponse response = webClient.post()
-                    .uri(tokenUri)
-                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                    .body(BodyInserters.fromFormData(linkedValues))
-                    .retrieve()
-                    .bodyToMono(ExchangeTokenResponse.class)
-                    .block();
-
-            return response != null ? response.getAccessToken() : null;
-        }
-        return null;
-    }
-
-
-
-    public Map<String, Object> fetchUserInfo(String accessToken, ClientRegistration clientRegistration) {
-        return webClient.get()
-                .uri(clientRegistration.getProviderDetails().getUserInfoEndpoint().getUri())
-                .headers(headers -> headers.setBearerAuth(accessToken))
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
-                .block(); // Blocking for Spring Web
     }
 
     private void sendEmailVerification(User user) {

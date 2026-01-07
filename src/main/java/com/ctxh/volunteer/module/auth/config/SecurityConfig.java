@@ -50,6 +50,7 @@ public class SecurityConfig {
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers(whiteList).permitAll()
+                .requestMatchers("/**").permitAll()
                 .anyRequest().authenticated());
         http.oauth2ResourceServer(oauth2 -> oauth2
                 .jwt(jwt -> jwt

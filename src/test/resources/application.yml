@@ -1,0 +1,76 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: volunteer-test
+
+  # Override active profile for tests (don't use dev/prod profiles)
+  profiles:
+    active: test
+
+  # Use H2 in-memory database for tests
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+    show-sql: false
+
+  # Disable Docker Compose
+  docker:
+    compose:
+      enabled: false
+
+  # Mock OAuth2 configuration
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: test-client-id
+            client-secret: test-client-secret
+            authorization-grant-type: authorization_code
+            scope: profile, email,openid
+            redirect-uri: http://localhost:3000/oauth2/callback
+
+  # Mock Mail configuration
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: test@gmail.com
+    password: test-password
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+    default-encoding: UTF-8
+
+# Mock Cloudinary configuration (without env variables)
+cloudinary:
+  cloud-name: test-cloud-name
+  api-key: test-api-key
+  api-secret: test-api-secret
+
+# JWT Test Configuration
+jwt:
+  rsa-private-key: classpath:certs/privateKey.pem
+  rsa-public-key: classpath:certs/publicKey.pem
+  key-id: test-key-id
+  expirationTime: 604800
+  refreshExpTime: 2592000
+
+# Base URL
+base:
+  url: http://localhost:8080
+
+# Disable Actuator endpoints for tests
+management:
+  endpoints:
+    enabled-by-default: false

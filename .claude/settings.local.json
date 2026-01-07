@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mvn test:*)",
+      "Bash(cat:*)",
+      "Bash(./mvnw clean test:*)",
+      "Bash(./mvnw test:*)"
+    ]
+  }
+}
