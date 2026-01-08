@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: volunteer-postgres
+    environment:
+      POSTGRES_DB: volunteer_db
+      POSTGRES_USER: volunteer
+      POSTGRES_PASSWORD: volunteer
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - volunteer-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U volunteer -d volunteer_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Spring Boot Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: volunteer-app
+    environment:
+      # Database (match với postgres service)
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/volunteer_db
+      SPRING_DATASOURCE_USERNAME: volunteer
+      SPRING_DATASOURCE_PASSWORD: volunteer
+
+      # JPA
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+
+      # Active Profile
+      SPRING_PROFILES_ACTIVE: dev
+
+      # JWT (dùng file PEM trong resources/certs, không cần env)
+      EXP_TOKEN: 604800
+      EXP_REFRESH_TOKEN: 2592000
+      JWT_KEY_ID: ctxh-key
+
+      # Mail (Gmail) - CẦN ĐIỀN
+      MAIL_SENDER_USERNAME: ${MAIL_SENDER_USERNAME:-your_email@gmail.com}
+      MAIL_SENDER_PASSWORD: ${MAIL_SENDER_PASSWORD:-your_app_password}
+
+      # Cloudinary - CẦN ĐIỀN
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-your_cloud_name}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-your_api_key}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-your_api_secret}
+
+      # Google OAuth - CẦN ĐIỀN
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-your_client_id}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-your_client_secret}
+      OAUTH2_REDIRECT_URI: ${OAUTH2_REDIRECT_URI:-http://localhost:3000/oauth2/callback}
+
+      # Base URL
+      BASE_URL_WEBSITE: http://localhost:8080
+    ports:
+      - "8080:8080"
+    networks:
+      - volunteer-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  volunteer-network:
+    driver: bridge
