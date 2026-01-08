@@ -5,15 +5,14 @@ FROM maven:3.9.9-eclipse-temurin-21-alpine AS build
 WORKDIR /app
 
 # Copy pom.xml and download dependencies (cached layer)
+# This layer is cached unless pom.xml changes
 COPY pom.xml .
-RUN mvn dependency:resolve -B || \
-    (echo "Retry 1/3: Maven dependency download failed, retrying..." && sleep 10 && mvn dependency:resolve -B) || \
-    (echo "Retry 2/3: Maven dependency download failed, retrying..." && sleep 20 && mvn dependency:resolve -B) || \
-    (echo "Retry 3/3: Maven dependency download failed, will try again during build..." && true)
+RUN mvn dependency:go-offline -B || mvn dependency:resolve -B || true
 
 # Copy source code and build
+# Only this layer rebuilds when source code changes
 COPY src ./src
-RUN mvn clean package -DskipTests -B
+RUN mvn package -DskipTests -B -o 2>/dev/null || mvn package -DskipTests -B
 
 # Stage 2: Runtime stage - Use minimal JRE
 FROM eclipse-temurin:21-jre-alpine

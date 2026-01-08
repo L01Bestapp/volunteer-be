@@ -17,8 +17,12 @@ spring:
   application:
     name: volunteer
 
+  # Startup optimization
+  main:
+    lazy-initialization: true  # Lazy init beans to speed up startup
+    banner-mode: off           # Disable banner
+
   datasource:
-    # Render database connection using individual env vars
     url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:volunteer_db}
     username: ${POSTGRES_USER:volunteer}
     password: ${POSTGRES_PASSWORD:volunteer}
