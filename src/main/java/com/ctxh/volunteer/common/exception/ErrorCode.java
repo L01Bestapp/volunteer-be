@@ -141,6 +141,7 @@ public enum ErrorCode {
     MAIL_SENDING_FAILED(2400, "Failed to send email", HttpStatus.INTERNAL_SERVER_ERROR),
     EMAIL_DOMAIN_NOT_ALLOWED(2401, "Email must be a valid HCMUT email address", HttpStatus.BAD_REQUEST),
     EMAIL_HAS_BEEN_REGISTERED(2402, "Email has already been registered", HttpStatus.CONFLICT),
+    EMAIL_ORGANIZATION_NOT_ALLOWED(2403, "Invalid email format for Organization", HttpStatus.BAD_REQUEST),
 
     FAILED_TO_UPLOAD_IMAGE(2500, "Failed to upload image", HttpStatus.BAD_REQUEST),
     ;

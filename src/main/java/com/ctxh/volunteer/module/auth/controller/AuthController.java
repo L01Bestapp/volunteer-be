@@ -37,13 +37,12 @@ import java.io.IOException;
 public class AuthController {
     private final AuthService authService;
 
-    @Operation(description = "Login", summary = "Authenticate user and return a access token and refresh token")
+    @Operation(description = "Login for student", summary = "Authenticate student and return a access toke, role and refresh token")
     @SecurityRequirements() // No authentication required for login
     @PostMapping("/login")
     public ApiResponse<TokenResponse> login(@RequestBody @Valid LoginRequest request) {
-        return ApiResponse.ok("login successful", authService.login(request));
+        return ApiResponse.ok("User login success", authService.login(request));
     }
-
 
     @Operation(description = "Login with Google", summary = "Authenticate with Google and return JWT tokens")
     @SecurityRequirements()

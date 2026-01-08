@@ -55,7 +55,7 @@ class StudentControllerTest {
         createRequest.setPassword("password123");
         createRequest.setFullName("Nguyen Van A");
         createRequest.setMssv("2012345");
-        createRequest.setGender("MALE");
+//        createRequest.setGender("MALE");
 
         // Setup update request
         updateRequest = new UpdateStudentRequestDto();

@@ -5,19 +5,7 @@ import com.ctxh.volunteer.common.entity.BaseEntity;
 import com.ctxh.volunteer.module.enrollment.EnrollmentStatus;
 import com.ctxh.volunteer.module.student.entity.Student;
 import io.hypersistence.utils.hibernate.id.Tsid;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.ForeignKey;
-import jakarta.persistence.Id;
-import jakarta.persistence.Index;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -46,7 +34,7 @@ import java.time.LocalDateTime;
 public class Enrollment extends BaseEntity {
 
     @Id
-    @Tsid
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long enrollmentId;
 
     // ============ RELATIONSHIPS ============

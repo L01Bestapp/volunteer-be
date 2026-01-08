@@ -8,6 +8,7 @@ import com.ctxh.volunteer.module.activity.enums.ActivityCategory;
 import com.ctxh.volunteer.module.activity.enums.ActivityStatus;
 import com.ctxh.volunteer.module.enrollment.dto.EnrollmentResponseDto;
 import jakarta.validation.Valid;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -17,7 +18,7 @@ public interface ActivityService {
     /**
      * Create a new activity
      */
-    ActivityResponseDto createActivity(Long organizationId, @Valid CreateActivityRequestDto requestDto);
+    ActivityResponseDto createActivity(Long organizationId, @Valid CreateActivityRequestDto requestDto, MultipartFile imageFile);
 
     /**
      * Get all activities of an organization

@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -19,6 +20,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/organization")
@@ -38,6 +41,19 @@ public class OrganizationController {
                 "Organization created successfully",
                 organizationService.registerOrganization(requestDto)
         );
+    }
+
+    @GetMapping
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<List<OrganizationResponseDto>> getAllOrganizations() {
+        return ApiResponse.ok(organizationService.getAllOrganization());
+    }
+
+    @PatchMapping("/{id}/active")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<Void> activeOrganization(@PathVariable("id") Long organizationId) {
+        organizationService.activeOrganization(organizationId);
+        return ApiResponse.ok("active account successfully");
     }
 
 //    sau này sửa lại cái id lấy từ Authenticated user

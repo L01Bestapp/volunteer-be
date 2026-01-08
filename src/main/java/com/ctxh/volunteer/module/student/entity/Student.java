@@ -6,7 +6,6 @@ import com.ctxh.volunteer.module.auth.entity.User;
 import com.ctxh.volunteer.module.enrollment.entity.Enrollment;
 import com.ctxh.volunteer.module.student.enums.Gender;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.hypersistence.utils.hibernate.id.Tsid;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -36,7 +35,6 @@ import java.util.List;
 @Builder
 public class Student extends BaseEntity {
     @Id
-    @Tsid
     private Long studentId;
 
     private String phoneNumber;

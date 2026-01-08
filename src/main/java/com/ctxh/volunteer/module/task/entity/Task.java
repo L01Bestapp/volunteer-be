@@ -1,14 +1,15 @@
 package com.ctxh.volunteer.module.task.entity;
 
-import com.ctxh.volunteer.module.activity.entity.Activity;
 import com.ctxh.volunteer.common.entity.BaseEntity;
-import io.hypersistence.utils.hibernate.id.Tsid;
+import com.ctxh.volunteer.module.activity.entity.Activity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
@@ -32,7 +33,7 @@ import lombok.Setter;
 public class Task extends BaseEntity {
 
     @Id
-    @Tsid
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long taskId;
 
     // ============ RELATIONSHIP ============

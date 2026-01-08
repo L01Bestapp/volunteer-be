@@ -101,6 +101,19 @@ public class OrganizationServiceImpl implements OrganizationService {
         return mapToOrganizationResponseDto(organization);
     }
 
+    @Override
+    public void activeOrganization(Long organizationId) {
+        Organization organization = organizationRepository.findById(organizationId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORGANIZATION_NOT_FOUND));
+        organization.activeOrganization();
+        organizationRepository.save(organization);
+    }
+
+    @Override
+    public List<OrganizationResponseDto> getAllOrganization() {
+        return organizationRepository.findAll().stream().map(this::mapToOrganizationResponseDto).toList();
+    }
+
 
     private OrganizationResponseDto mapToOrganizationResponseDto(Organization organization) {
         return OrganizationResponseDto.builder()

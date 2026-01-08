@@ -22,8 +22,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -44,10 +46,12 @@ public class ActivityController {
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<ActivityResponseDto> createActivity(
             @RequestParam("organizationId") Long organizationId,
-            @Valid @RequestBody CreateActivityRequestDto requestDto) {
+            @Valid @RequestPart("data") CreateActivityRequestDto requestDto,
+            @RequestPart(value = "image", required = false) MultipartFile imageFile
+            ) {
         return ApiResponse.ok(
                 "Activity created successfully",
-                activityService.createActivity(organizationId, requestDto)
+                activityService.createActivity(organizationId, requestDto, imageFile)
         );
     }
 

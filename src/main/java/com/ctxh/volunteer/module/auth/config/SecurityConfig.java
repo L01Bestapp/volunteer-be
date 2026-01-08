@@ -1,6 +1,7 @@
 package com.ctxh.volunteer.module.auth.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -20,6 +21,7 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@EnableConfigurationProperties(RSAKeyRecord.class)
 public class SecurityConfig {
     private final CustomJwtDecoder customJwtDecoder;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
@@ -68,9 +70,14 @@ public class SecurityConfig {
     @Bean
     UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("**"));
-        configuration.setAllowedMethods(List.of("POST", "GET", "PUT", "DELETE"));
+
+        // SỬA DÒNG NÀY: Dùng setAllowedOriginPatterns thay vì setAllowedOrigins
+        configuration.setAllowedOriginPatterns(List.of("*"));
+
+        configuration.setAllowedMethods(List.of("POST", "GET", "PUT", "DELETE", "OPTIONS")); // Thêm OPTIONS
+        configuration.setAllowedHeaders(List.of("*")); // Thêm dòng này để cho phép mọi Header
         configuration.setAllowCredentials(true);
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

@@ -115,7 +115,7 @@ class ActivityServiceImplTest {
         when(activityRepository.save(any(Activity.class))).thenReturn(testActivity);
 
         // Act
-        ActivityResponseDto response = activityService.createActivity(1L, createRequest);
+        ActivityResponseDto response = activityService.createActivity(1L, createRequest, null);
 
         // Assert
         assertThat(response).isNotNull();
@@ -133,7 +133,7 @@ class ActivityServiceImplTest {
         when(organizationRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThatThrownBy(() -> activityService.createActivity(999L, createRequest))
+        assertThatThrownBy(() -> activityService.createActivity(999L, createRequest, null))
                 .isInstanceOf(BusinessException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.ORGANIZATION_NOT_FOUND);
 
@@ -151,7 +151,7 @@ class ActivityServiceImplTest {
         when(organizationRepository.findById(1L)).thenReturn(Optional.of(testOrganization));
 
         // Act & Assert
-        assertThatThrownBy(() -> activityService.createActivity(1L, createRequest))
+        assertThatThrownBy(() -> activityService.createActivity(1L, createRequest, null))
                 .isInstanceOf(BusinessException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_ACTIVITY_DATE);
 
@@ -168,7 +168,7 @@ class ActivityServiceImplTest {
         when(organizationRepository.findById(1L)).thenReturn(Optional.of(testOrganization));
 
         // Act & Assert
-        assertThatThrownBy(() -> activityService.createActivity(1L, createRequest))
+        assertThatThrownBy(() -> activityService.createActivity(1L, createRequest, null))
                 .isInstanceOf(BusinessException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_REGISTRATION_DEADLINE);
 

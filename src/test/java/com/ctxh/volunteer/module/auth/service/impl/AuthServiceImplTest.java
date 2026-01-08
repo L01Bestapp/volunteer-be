@@ -1,7 +1,6 @@
 package com.ctxh.volunteer.module.auth.service.impl;
 
 import com.cloudinary.Cloudinary;
-import com.cloudinary.Uploader;
 import com.ctxh.volunteer.common.exception.BusinessException;
 import com.ctxh.volunteer.common.exception.ErrorCode;
 import com.ctxh.volunteer.common.util.AppConstants;
@@ -40,7 +39,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-import java.io.IOException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAPrivateKey;
@@ -142,7 +140,7 @@ class AuthServiceImplTest {
 
     @Test
     @DisplayName("Login - Success with valid credentials")
-    void login_Success_WithValidCredentials() {
+    void login_ForStudent_Success_WithValidCredentials() {
         // Arrange
         LoginRequest request = new LoginRequest("test@hcmut.edu.vn", "password123");
         when(userRepository.findByEmail(request.getEmail())).thenReturn(Optional.of(testUser));
@@ -162,7 +160,7 @@ class AuthServiceImplTest {
 
     @Test
     @DisplayName("Login - Fail with non-existent email")
-    void login_ThrowsException_WhenUserNotFound() {
+    void login_ForStudent_ThrowsException_WhenUserNotFound() {
         // Arrange
         LoginRequest request = new LoginRequest("nonexistent@hcmut.edu.vn", "password123");
         when(userRepository.findByEmail(request.getEmail())).thenReturn(Optional.empty());
@@ -178,7 +176,7 @@ class AuthServiceImplTest {
 
     @Test
     @DisplayName("Login - Fail with wrong password")
-    void login_ThrowsException_WithWrongPassword() {
+    void login_ForStudent_ThrowsException_WithWrongPassword() {
         // Arrange
         LoginRequest request = new LoginRequest("test@hcmut.edu.vn", "wrongPassword");
         when(userRepository.findByEmail(request.getEmail())).thenReturn(Optional.of(testUser));

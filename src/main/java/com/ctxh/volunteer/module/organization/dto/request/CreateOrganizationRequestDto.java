@@ -2,6 +2,7 @@ package com.ctxh.volunteer.module.organization.dto.request;
 
 import com.ctxh.volunteer.common.util.EnumValidation;
 import com.ctxh.volunteer.module.organization.enums.OrganizationType;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -12,7 +13,7 @@ import lombok.Setter;
 @Setter
 public class CreateOrganizationRequestDto {
     @NotBlank(message = "Email is required")
-    @Pattern(regexp = "^[A-Za-z0-9+_.-]+@hcmut\\.edu\\.vn$", message = "email must be a valid HCMUT email address")
+    @Email(message = "Email must be a valid email address")
     private String email;
 
     @NotBlank(message = "password is required")
@@ -27,7 +28,7 @@ public class CreateOrganizationRequestDto {
     @NotBlank(message = "Organization type is required")
     private String organizationType;
 
-    @Pattern(regexp = "^\\+?84\\d{9}$", message = "Phone number must be a valid Vietnam phone number")
+    @Pattern(regexp = "^\\+?(84|0)\\d{9}$", message = "Phone number must be a valid Vietnam phone number")
     private String phoneNumber;
 
 }

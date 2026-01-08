@@ -43,6 +43,12 @@ public class StudentController {
         );
     }
 
+    @GetMapping
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<List<StudentResponseDto>> getAllStudents(){
+        return ApiResponse.ok(studentService.getAllStudents());
+    }
+
     /**
      * Update student information
      * PUT /api/v1/students/{id}

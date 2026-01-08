@@ -1,7 +1,10 @@
 package com.ctxh.volunteer.module.activity.service.impl;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.ctxh.volunteer.common.exception.BusinessException;
 import com.ctxh.volunteer.common.exception.ErrorCode;
+import com.ctxh.volunteer.common.util.ImageValidator;
 import com.ctxh.volunteer.module.activity.dto.request.CreateActivityRequestDto;
 import com.ctxh.volunteer.module.activity.dto.request.UpdateActivityRequestDto;
 import com.ctxh.volunteer.module.activity.dto.response.ActivityListResponseDto;
@@ -12,6 +15,7 @@ import com.ctxh.volunteer.module.activity.enums.ActivityStatus;
 import com.ctxh.volunteer.module.activity.repository.ActivityRepository;
 import com.ctxh.volunteer.module.activity.service.ActivityService;
 import com.ctxh.volunteer.module.activity.specification.ActivitySpecification;
+import com.ctxh.volunteer.module.auth.entity.User;
 import com.ctxh.volunteer.module.enrollment.EnrollmentStatus;
 import com.ctxh.volunteer.module.enrollment.dto.EnrollmentResponseDto;
 import com.ctxh.volunteer.module.enrollment.entity.Enrollment;
@@ -24,11 +28,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -38,10 +45,12 @@ public class ActivityServiceImpl implements ActivityService {
     private final ActivityRepository activityRepository;
     private final OrganizationRepository organizationRepository;
     private final EnrollmentRepository enrollmentRepository;
+    private final ImageValidator imageValidator;
+    private final Cloudinary cloudinary;
 
     @Override
     @Transactional
-    public ActivityResponseDto createActivity(Long organizationId, @Valid CreateActivityRequestDto requestDto) {
+    public ActivityResponseDto createActivity(Long organizationId,CreateActivityRequestDto requestDto, MultipartFile imageFile) {
         // Find organization
         Organization organization = organizationRepository.findById(organizationId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORGANIZATION_NOT_FOUND));
@@ -57,10 +66,13 @@ public class ActivityServiceImpl implements ActivityService {
             throw new BusinessException(ErrorCode.INVALID_REGISTRATION_DEADLINE);
         }
 
+        String imageUrl = uploadImage(imageFile);
+
         // Create activity
         Activity activity = Activity.builder()
                 .organization(organization)
                 .title(requestDto.getTitle())
+                .imageUrl(imageUrl)
                 .description(requestDto.getDescription())
                 .shortDescription(requestDto.getShortDescription())
                 .category(requestDto.getCategory() != null ? ActivityCategory.valueOf(requestDto.getCategory()) : null)
@@ -82,6 +94,17 @@ public class ActivityServiceImpl implements ActivityService {
         log.info("Created activity with ID: {} for organization: {}", savedActivity.getActivityId(), organizationId);
 
         return mapToActivityResponseDto(savedActivity);
+    }
+
+    private String uploadImage(MultipartFile avatar) {
+        imageValidator.validate(avatar);
+        try {
+            Map<?,?> uploadResult = cloudinary.uploader().upload(avatar.getBytes(), ObjectUtils.emptyMap());
+            log.info("Uploaded image to Cloudinary: {}", uploadResult);
+            return uploadResult.get("secure_url").toString();
+        } catch (IOException e) {
+            throw new BusinessException(ErrorCode.FAILED_TO_UPLOAD_IMAGE);
+        }
     }
 
     @Override

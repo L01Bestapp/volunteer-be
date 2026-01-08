@@ -75,7 +75,7 @@ public class StudentServiceImpl implements StudentService {
                 .user(user)
                 .fullName(requestDto.getFullName())
                 .mssv(requestDto.getMssv())
-                .gender(Gender.valueOf(requestDto.getGender()))
+                .phoneNumber(requestDto.getPhoneNumber())
                 .totalCtxhDays(0.0)
                 .build();
 
@@ -216,9 +216,15 @@ public class StudentServiceImpl implements StudentService {
                 .toList();
     }
 
+    @Override
+    public List<StudentResponseDto> getAllStudents() {
+        return studentRepository.findAll().stream()
+                .map(this::mapToStudentResponseDto)
+                .toList();
+    }
 
 
-//    // ============ MAPPING METHODS ============
+    //    // ============ MAPPING METHODS ============
 //
     private StudentResponseDto mapToStudentResponseDto(Student student) {
         return StudentResponseDto.builder()

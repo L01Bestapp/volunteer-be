@@ -11,6 +11,8 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
@@ -45,7 +47,7 @@ import java.time.LocalDateTime;
 public class Attendance extends BaseEntity {
 
     @Id
-    @Tsid
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long attendanceId;
 
     // ============ RELATIONSHIPS ============

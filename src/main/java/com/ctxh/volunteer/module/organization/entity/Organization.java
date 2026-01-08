@@ -2,11 +2,10 @@ package com.ctxh.volunteer.module.organization.entity;
 
 import com.ctxh.volunteer.common.entity.BaseEntity;
 import com.ctxh.volunteer.module.activity.entity.Activity;
+import com.ctxh.volunteer.module.auth.entity.User;
 import com.ctxh.volunteer.module.organization.enums.OrganizationType;
 import com.ctxh.volunteer.module.organization.enums.VerificationStatus;
-import com.ctxh.volunteer.module.auth.entity.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.hypersistence.utils.hibernate.id.Tsid;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,7 +34,6 @@ import java.util.List;
 public class Organization extends BaseEntity {
 
     @Id
-    @Tsid
     private Long organizationId;
 
     // ============ ONE-TO-ONE WITH USER ============
@@ -123,6 +121,10 @@ public class Organization extends BaseEntity {
      */
     public boolean canCreateActivities() {
         return verificationStatus == VerificationStatus.APPROVED;
+    }
+
+    public void activeOrganization() {
+        this.verificationStatus = VerificationStatus.APPROVED;
     }
 
     @Override

@@ -11,19 +11,7 @@ import com.ctxh.volunteer.module.organization.entity.Organization;
 import com.ctxh.volunteer.module.task.entity.Task;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.hypersistence.utils.hibernate.id.Tsid;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.ForeignKey;
-import jakarta.persistence.Id;
-import jakarta.persistence.Index;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -52,7 +40,7 @@ import static com.ctxh.volunteer.common.util.AppConstants.REGISTRATION_MULTIPLIE
 public class Activity extends BaseEntity {
 
     @Id
-    @Tsid
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long activityId;
 
     // ============ RELATIONSHIP WITH ORGANIZATION ============
@@ -68,6 +56,9 @@ public class Activity extends BaseEntity {
 
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
+
+    @Column(name = "image_url")
+    private String imageUrl;
 
     @Column(name = "short_description", length = 500)
     private String shortDescription;

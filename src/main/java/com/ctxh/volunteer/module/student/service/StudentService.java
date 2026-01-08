@@ -29,6 +29,8 @@ public interface StudentService {
      * Get student's certificates
      */
     List<CertificateResponseDto> getStudentCertificates(Long studentId);
+
+    List<StudentResponseDto> getAllStudents();
     //  --------------------------------------------------------------
 
 }

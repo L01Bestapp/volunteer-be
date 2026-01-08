@@ -5,10 +5,16 @@ import com.ctxh.volunteer.module.organization.dto.request.UpdateOrganizationRequ
 import com.ctxh.volunteer.module.organization.dto.response.OrganizationResponseDto;
 import jakarta.validation.Valid;
 
+import java.util.List;
+
 public interface OrganizationService {
     OrganizationResponseDto registerOrganization(@Valid CreateOrganizationRequestDto requestDto);
 
     OrganizationResponseDto updateOrganization(Long organizationId, @Valid UpdateOrganizationRequestDto requestDto);
 
     OrganizationResponseDto getOrganizationById(Long organizationId);
+
+    void activeOrganization(Long organizationId);
+
+    List<OrganizationResponseDto> getAllOrganization();
 }

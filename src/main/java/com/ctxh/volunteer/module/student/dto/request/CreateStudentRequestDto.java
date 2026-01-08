@@ -1,7 +1,5 @@
 package com.ctxh.volunteer.module.student.dto.request;
 
-import com.ctxh.volunteer.common.util.EnumValidation;
-import com.ctxh.volunteer.module.student.enums.Gender;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -29,6 +27,8 @@ public class CreateStudentRequestDto {
     @Pattern(regexp = "^\\d{7}$", message = "MSSV must be exactly 7 digits")
     private String mssv;
 
-    @EnumValidation(name = "Gender", enumClass = Gender.class)
-    private String gender;
+//    @EnumValidation(name = "Gender", enumClass = Gender.class)
+//    private String gender;
+    @Pattern(regexp = "^\\+?(84|0)\\d{9}$", message = "Phone number must be a valid Vietnam phone number")
+    private String phoneNumber;
 }

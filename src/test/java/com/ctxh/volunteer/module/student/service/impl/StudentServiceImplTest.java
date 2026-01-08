@@ -113,7 +113,7 @@ class StudentServiceImplTest {
         createRequest.setPassword("password123");
         createRequest.setFullName("New Student");
         createRequest.setMssv("2099999");
-        createRequest.setGender("MALE");
+//        createRequest.setGender("MALE");
 
         updateRequest = new UpdateStudentRequestDto();
         updateRequest.setFullName("Updated Name");

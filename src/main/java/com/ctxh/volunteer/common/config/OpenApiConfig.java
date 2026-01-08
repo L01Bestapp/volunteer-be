@@ -10,6 +10,7 @@ import io.swagger.v3.oas.models.security.OAuthFlows;
 import io.swagger.v3.oas.models.security.Scopes;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.servers.Server;
 import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,26 +37,12 @@ public class OpenApiConfig {
                                 .email("thangvip030201@gmail.com")
                         )
                 )
+                .addServersItem(new Server().url("/"))
                 .components(new Components()
                         .addSecuritySchemes("bearerAuth", new SecurityScheme()
                                 .type(SecurityScheme.Type.HTTP)
                                 .scheme("bearer")
                                 .bearerFormat("JWT"))
-                        .addSecuritySchemes("googleOAuth", new SecurityScheme()
-                                .type(SecurityScheme.Type.OAUTH2)
-                                .description("Google OAuth2 Authentication")
-                                .flows(new OAuthFlows()
-                                        .authorizationCode(new OAuthFlow()
-                                                .authorizationUrl("https://accounts.google.com/o/oauth2/v2/auth")
-                                                .tokenUrl("https://oauth2.googleapis.com/token")
-                                                .scopes(new Scopes()
-                                                        .addString("openid", "OpenID Connect")
-                                                        .addString("profile", "User profile information")
-                                                        .addString("email", "User email address")
-                                                )
-                                        )
-                                )
-                        )
                 )
                 .security(List.of(new SecurityRequirement().addList("bearerAuth")))
                 ;

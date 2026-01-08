@@ -102,12 +102,16 @@ public class AuthServiceImpl implements AuthService {
         // Here you would typically generate a JWT token or similar
         String accessToken = generateToken(user, PurposeToken.ACCESS);
         String refreshToken = generateToken(user, PurposeToken.REFRESH);
+        String[] roles = user.getRoles().stream().map(Role::getRoleName).toArray(String[]::new);
+        String role = roles[0];
+        if (roles.length == 3) role = "ADMIN";
 
         // reset failed login attempts
         user.setFailedLoginAttempts(0);
         return TokenResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
+                .role(role)
                 .build();
     }
 
