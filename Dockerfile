@@ -6,8 +6,6 @@ WORKDIR /app
 
 # Copy pom.xml and download dependencies (cached layer)
 COPY pom.xml .
-# Use dependency:resolve instead of go-offline (more forgiving with network issues)
-# Add retry logic for Maven Central network issues
 RUN mvn dependency:resolve -B || \
     (echo "Retry 1/3: Maven dependency download failed, retrying..." && sleep 10 && mvn dependency:resolve -B) || \
     (echo "Retry 2/3: Maven dependency download failed, retrying..." && sleep 20 && mvn dependency:resolve -B) || \
@@ -17,7 +15,7 @@ RUN mvn dependency:resolve -B || \
 COPY src ./src
 RUN mvn clean package -DskipTests -B
 
-# Stage 2: Runtime stage
+# Stage 2: Runtime stage - Use minimal JRE
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
@@ -35,13 +33,23 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
 
-# Run the application with production-ready JVM options
+# JVM Memory Optimization for 512MB RAM environment
+# Total RAM: 512MB
+# OS + processes: ~100MB
+# JVM available: ~400MB max
+# Heap: 300MB max (leave room for metaspace, code cache, threads)
+ENV JAVA_TOOL_OPTIONS="\
+    -XX:MaxRAMPercentage=75.0 \
+    -XX:InitialRAMPercentage=50.0 \
+    -XX:+UseContainerSupport \
+    -XX:+UseG1GC \
+    -XX:MaxGCPauseMillis=100 \
+    -XX:+UseStringDeduplication \
+    -XX:+OptimizeStringConcat \
+    -Djava.security.egd=file:/dev/./urandom"
+
+# Run the application
 ENTRYPOINT ["java", \
-    "-Xms256m", \
-    "-Xmx512m", \
-    "-XX:+UseG1GC", \
-    "-XX:MaxGCPauseMillis=200", \
-    "-Djava.security.egd=file:/dev/./urandom", \
     "-Dspring.profiles.active=prod", \
     "-jar", \
     "app.jar"]

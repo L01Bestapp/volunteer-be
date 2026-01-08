@@ -1,5 +1,13 @@
 server:
   port: ${SERVER_PORT:8080}
+  # Memory optimization: Reduce Tomcat threads for low-memory environment
+  tomcat:
+    threads:
+      max: 50          # Down from default 200
+      min-spare: 10    # Down from default 10
+    max-connections: 100  # Down from default 8192
+    accept-count: 50   # Down from default 100
+  shutdown: graceful   # Graceful shutdown
 
 springdoc:
   swagger-ui:
@@ -15,6 +23,13 @@ spring:
     username: ${POSTGRES_USER:volunteer}
     password: ${POSTGRES_PASSWORD:volunteer}
     driver-class-name: org.postgresql.Driver
+    # HikariCP optimization for low memory
+    hikari:
+      maximum-pool-size: 5        # Down from default 10
+      minimum-idle: 2             # Down from default 10
+      connection-timeout: 30000   # 30 seconds
+      idle-timeout: 600000        # 10 minutes
+      max-lifetime: 1800000       # 30 minutes
 
   jpa:
     hibernate:
@@ -26,9 +41,16 @@ spring:
       hibernate:
         format_sql: false
         jdbc:
-          batch_size: 20
+          batch_size: 15       # Reduce batch size
+          fetch_size: 50       # Limit fetch size
         order_inserts: true
         order_updates: true
+        # Memory optimization
+        query:
+          in_clause_parameter_padding: false
+        cache:
+          use_second_level_cache: false  # Disable L2 cache to save memory
+          use_query_cache: false
 
   security:
     oauth2:
