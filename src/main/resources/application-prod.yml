@@ -1,3 +1,87 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
 spring:
   application:
     name: volunteer
+
+  datasource:
+    # Render provides PostgreSQL URL format: postgresql://user:pass@host/db
+    # Spring Boot needs JDBC format: jdbc:postgresql://host/db
+    # Solution: Update SPRING_DATASOURCE_URL in Render to have 'jdbc:' prefix
+    url: ${SPRING_DATASOURCE_URL}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+    show-sql: false  # Disable SQL logging in production
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            authorization-grant-type: authorization_code
+            scope: profile, email, openid
+            redirect-uri: ${BASE_URL_WEBSITE}/login/oauth2/code/google
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_SENDER_USERNAME}
+    password: ${MAIL_SENDER_PASSWORD}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+    default-encoding: UTF-8
+
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME}
+  api-key: ${CLOUDINARY_API_KEY}
+  api-secret: ${CLOUDINARY_API_SECRET}
+
+jwt:
+  rsa-private-key: classpath:certs/privateKey.pem
+  rsa-public-key: classpath:certs/publicKey.pem
+  key-id: ${JWT_KEY_ID:ctxh-key}
+  expirationTime: ${EXP_TOKEN:604800} # 7 days in seconds
+  refreshExpTime: ${EXP_REFRESH_TOKEN:2592000} # 30 days in seconds
+
+base:
+  url: ${BASE_URL_WEBSITE}
+
+# Admin credentials (for initial setup or admin features)
+admin:
+  username: ${ADMIN_USERNAME:admin}
+  password: ${ADMIN_PASSWORD:admin}
+
+# Google OAuth for different platforms
+google:
+  client-id:
+    web: ${GOOGLE_CLIENT_ID}
+    android: ${GOOGLE_CLIENT_ID_ANDROID:}
+    ios: ${GOOGLE_CLIENT_ID_IOS:}
+
+logging:
+  level:
+    root: INFO
+    com.ctxh.volunteer: INFO
+    org.springframework.web: WARN
+    org.springframework.security: WARN
+    org.hibernate: WARN
