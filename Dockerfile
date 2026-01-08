@@ -6,7 +6,12 @@ WORKDIR /app
 
 # Copy pom.xml and download dependencies (cached layer)
 COPY pom.xml .
-RUN mvn dependency:go-offline -B
+# Use dependency:resolve instead of go-offline (more forgiving with network issues)
+# Add retry logic for Maven Central network issues
+RUN mvn dependency:resolve -B || \
+    (echo "Retry 1/3: Maven dependency download failed, retrying..." && sleep 10 && mvn dependency:resolve -B) || \
+    (echo "Retry 2/3: Maven dependency download failed, retrying..." && sleep 20 && mvn dependency:resolve -B) || \
+    (echo "Retry 3/3: Maven dependency download failed, will try again during build..." && true)
 
 # Copy source code and build
 COPY src ./src
