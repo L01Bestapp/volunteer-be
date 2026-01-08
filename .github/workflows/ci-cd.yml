@@ -1,19 +1,17 @@
-name: CI/CD Simple
+name: Java CI with Maven
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ "main" ]
 
 jobs:
   build:
-    name: Build & Test
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -22,23 +20,36 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Build with Maven
-        run: ./mvnw clean compile -B
-
+      # Chạy test và tạo JaCoCo coverage report
       - name: Run tests
-        run: ./mvnw test -B
+        run: ./mvnw test
 
-      - name: Package
-        run: ./mvnw package -DskipTests -B
+      # Tạo JaCoCo report sau khi test xong
+      - name: Generate JaCoCo report
+        run: ./mvnw jacoco:report
 
+      # Build project (skip tests vì đã chạy ở trên)
+      - name: Build with Maven
+        run: ./mvnw -B package -DskipTests
 
-        # - name: Upload coverage to Codecov
-        #   uses: codecov/codecov-action@v4
-        #   with:
-        #     token: ${{ secrets.CODECOV_TOKEN }}
+      # Upload JaCoCo coverage report lên GitHub Artifacts
+      - name: Upload JaCoCo coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jacoco-report
+          path: target/site/jacoco/
+          retention-days: 30
 
-        # - name: Log in to Docker Hub
-        #   uses: docker/login-action@v3
-        #   with:
-        #     username: ${{ secrets.DOCKER_USERNAME }}
-        #     password: ${{ secrets.DOCKER_PASSWORD }}
+      # Upload coverage lên Codecov để hiển thị badge
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: L01Bestapp/volunteer-be
+          files: ./target/site/jacoco/jacoco.xml
+          fail_ci_if_error: false
+
+      # Cập nhật dependency graph cho GitHub Security
+      - name: Update dependency graph
+        uses: advanced-security/maven-dependency-submission-action@571e99aab1055c2e71a1e2309b9691de18d6b7d6
