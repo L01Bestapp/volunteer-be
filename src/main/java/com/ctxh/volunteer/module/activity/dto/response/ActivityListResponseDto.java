@@ -19,6 +19,7 @@ public class ActivityListResponseDto {
     private Long activityId;
     private String title;
     private String shortDescription;
+    private String imageUrl;
     private ActivityCategory category;
     private Double theNumberOfCtxhDay;
     private LocalDateTime startDateTime;

@@ -49,7 +49,7 @@ public class OrganizationController {
         return ApiResponse.ok(organizationService.getAllOrganization());
     }
 
-    @PatchMapping("/{id}/active")
+    @PutMapping("/{id}/active")
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<Void> activeOrganization(@PathVariable("id") Long organizationId) {
         organizationService.activeOrganization(organizationId);

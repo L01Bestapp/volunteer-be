@@ -19,6 +19,7 @@ public class ActivityResponseDto {
     private Long activityId;
     private Long organizationId;
     private String organizationName;
+    private String imageUrl;
     private String name;
     private String description;
     private String shortDescription;
