@@ -30,7 +30,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(value = StudentController.class,
+@WebMvcTest(value = {StudentController.class, com.ctxh.volunteer.common.exception.GlobalExceptionHandler.class},
     excludeFilters = @org.springframework.context.annotation.ComponentScan.Filter(
         type = org.springframework.context.annotation.FilterType.ASSIGNABLE_TYPE,
         classes = com.ctxh.volunteer.module.auth.config.CustomAuthenticationConverter.class
@@ -64,14 +64,14 @@ class StudentControllerTest {
         createRequest = new CreateStudentRequestDto();
         createRequest.setEmail("student@hcmut.edu.vn");
         createRequest.setPassword("password123");
-        createRequest.setFullName("Nguyen Van A");
+        createRequest.setFullName("Nguyen Van An");
         createRequest.setMssv("2012345");
 //        createRequest.setGender("MALE");
 
         // Setup update request
         updateRequest = new UpdateStudentRequestDto();
         updateRequest.setFullName("Updated Name");
-        updateRequest.setPhoneNumber("0123456789");
+        updateRequest.setPhoneNumber("84123456789");
         updateRequest.setFaculty("Computer Science");
 
         // Setup response

@@ -19,7 +19,7 @@ import java.time.LocalDate;
 @Builder
 public class UpdateStudentRequestDto {
     // User information
-    @Pattern(regexp = "^\\+?84\\d{9}$", message = "Phone number must be a valid Vietnam phone number")
+    @Pattern(regexp = "^\\+?(84|0)\\d{9}$", message = "Phone number must be a valid Vietnam phone number")
     private String phoneNumber;
 
     // Student information

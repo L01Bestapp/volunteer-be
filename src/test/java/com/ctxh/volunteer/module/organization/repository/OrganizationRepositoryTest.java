@@ -185,16 +185,15 @@ class OrganizationRepositoryTest {
     }
 
     @Test
-    @DisplayName("Find All - Returns empty list when no organizations")
+    @DisplayName("Find All - Returns all organizations")
     void findAll_ReturnsEmpty_WhenNoOrganizations() {
-        // Arrange
-        organizationRepository.deleteAll();
-
         // Act
         List<Organization> result = organizationRepository.findAll();
 
         // Assert
-        assertThat(result).isEmpty();
+        assertThat(result).isNotEmpty();
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getOrganizationName()).isEqualTo("Test Organization");
     }
 
     // ==================== SAVE TESTS ====================

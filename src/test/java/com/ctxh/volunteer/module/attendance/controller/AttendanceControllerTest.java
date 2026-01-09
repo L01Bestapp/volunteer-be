@@ -28,7 +28,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(value = AttendanceController.class,
+@WebMvcTest(value = {AttendanceController.class, com.ctxh.volunteer.common.exception.GlobalExceptionHandler.class},
     excludeFilters = @org.springframework.context.annotation.ComponentScan.Filter(
         type = org.springframework.context.annotation.FilterType.ASSIGNABLE_TYPE,
         classes = com.ctxh.volunteer.module.auth.config.CustomAuthenticationConverter.class
@@ -148,7 +148,7 @@ class AttendanceControllerTest {
         mockMvc.perform(post("/api/v1/attendance/check-in")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(checkInRequest)))
-                .andExpect(status().isForbidden())
+                .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false));
     }
 

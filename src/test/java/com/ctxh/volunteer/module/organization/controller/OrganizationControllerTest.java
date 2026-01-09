@@ -38,7 +38,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(value = OrganizationController.class,
+@WebMvcTest(value = {OrganizationController.class, com.ctxh.volunteer.common.exception.GlobalExceptionHandler.class},
     excludeFilters = @org.springframework.context.annotation.ComponentScan.Filter(
         type = org.springframework.context.annotation.FilterType.ASSIGNABLE_TYPE,
         classes = com.ctxh.volunteer.module.auth.config.CustomAuthenticationConverter.class
@@ -82,7 +82,7 @@ class OrganizationControllerTest {
         updateRequest = new UpdateOrganizationRequestDto();
         updateRequest.setRepresentativeName("Jane Smith");
         updateRequest.setRepresentativeEmail("jane@test.com");
-        updateRequest.setRepresentativePhoneNumber("0987654321");
+        updateRequest.setRepresentativePhoneNumber("84987654321");
         updateRequest.setBio("Updated bio");
 
         // Setup response
@@ -206,7 +206,7 @@ class OrganizationControllerTest {
                 .type(OrganizationType.NGO)
                 .representativeName("Jane Smith")
                 .representativeEmail("jane@test.com")
-                .representativePhoneNumber("0987654321")
+                .representativePhoneNumber("84987654321")
                 .bio("Updated bio")
                 .build();
 
@@ -222,7 +222,7 @@ class OrganizationControllerTest {
                 .andExpect(jsonPath("$.data.organizationId").value(1L))
                 .andExpect(jsonPath("$.data.representativeName").value("Jane Smith"))
                 .andExpect(jsonPath("$.data.representativeEmail").value("jane@test.com"))
-                .andExpect(jsonPath("$.data.representativePhoneNumber").value("0987654321"))
+                .andExpect(jsonPath("$.data.representativePhoneNumber").value("84987654321"))
                 .andExpect(jsonPath("$.data.bio").value("Updated bio"));
     }
 
