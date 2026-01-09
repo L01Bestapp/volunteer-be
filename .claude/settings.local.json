@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mvn clean test:*)",
+      "Bash(dir /B \"target\\\\surefire-reports\")",
+      "Bash(findstr:*)",
+      "Bash(ls:*)",
+      "Bash(grep:*)",
+      "Bash(mvn test:*)"
+    ]
+  }
+}

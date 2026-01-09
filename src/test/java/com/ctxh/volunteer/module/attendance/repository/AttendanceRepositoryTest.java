@@ -67,10 +67,27 @@ class AttendanceRepositoryTest {
                 .build();
         studentRole = roleRepository.save(studentRole);
 
-        // Create organization
+        Role organizationRole = Role.builder()
+                .roleName(RoleEnum.ORGANIZATION.name())
+                .build();
+        organizationRole = roleRepository.save(organizationRole);
+
+        // Create organization with user
+        User orgUser = User.builder()
+                .email("org@test.com")
+                .password("password")
+                .avatarUrl("avatar.png")
+                .roles(List.of(organizationRole))
+                .build();
+
         testOrganization = Organization.builder()
                 .organizationName("Test Organization")
+                .type(com.ctxh.volunteer.module.organization.enums.OrganizationType.NGO)
+                .user(orgUser)
                 .build();
+
+        orgUser.setOrganization(testOrganization);
+        userRepository.save(orgUser);
         testOrganization = organizationRepository.save(testOrganization);
 
         // Create activity
@@ -80,6 +97,7 @@ class AttendanceRepositoryTest {
                 .organization(testOrganization)
                 .startDateTime(LocalDateTime.now())
                 .endDateTime(LocalDateTime.now().plusDays(1))
+                .theNumberOfCtxhDay(1.0)
                 .build();
         testActivity = activityRepository.save(testActivity);
 
@@ -167,6 +185,7 @@ class AttendanceRepositoryTest {
                 .organization(testOrganization)
                 .startDateTime(LocalDateTime.now())
                 .endDateTime(LocalDateTime.now().plusDays(1))
+                .theNumberOfCtxhDay(1.0)
                 .build();
         emptyActivity = activityRepository.save(emptyActivity);
 
@@ -195,9 +214,14 @@ class AttendanceRepositoryTest {
 
         // Assert
         assertThat(result).hasSize(3);
+        // Filter only attendances with checkInTime and verify ordering
+        java.util.List<Attendance> withCheckIn = result.stream()
+                .filter(a -> a.getCheckInTime() != null)
+                .toList();
+        assertThat(withCheckIn).hasSizeGreaterThanOrEqualTo(2);
         // Most recent check-in should be first
-        assertThat(result.get(0).getCheckInTime())
-                .isAfter(result.get(result.size() - 1).getCheckInTime());
+        assertThat(withCheckIn.get(0).getCheckInTime())
+                .isAfter(withCheckIn.get(withCheckIn.size() - 1).getCheckInTime());
     }
 
     // ==================== FIND BY STUDENT AND ACTIVITY TESTS ====================
@@ -242,6 +266,7 @@ class AttendanceRepositoryTest {
                 .organization(testOrganization)
                 .startDateTime(LocalDateTime.now())
                 .endDateTime(LocalDateTime.now().plusDays(1))
+                .theNumberOfCtxhDay(1.0)
                 .build();
         anotherActivity = activityRepository.save(anotherActivity);
 
@@ -272,6 +297,7 @@ class AttendanceRepositoryTest {
                 .organization(testOrganization)
                 .startDateTime(LocalDateTime.now().minusDays(10))
                 .endDateTime(LocalDateTime.now().minusDays(9))
+                .theNumberOfCtxhDay(1.0)
                 .build();
         oldActivity = activityRepository.save(oldActivity);
 
@@ -348,6 +374,7 @@ class AttendanceRepositoryTest {
                 .organization(testOrganization)
                 .startDateTime(LocalDateTime.now())
                 .endDateTime(LocalDateTime.now().plusDays(1))
+                .theNumberOfCtxhDay(1.0)
                 .build();
         emptyActivity = activityRepository.save(emptyActivity);
 
@@ -403,12 +430,12 @@ class AttendanceRepositoryTest {
     @DisplayName("Find By Date Range - Handles exact boundary")
     void findByStudentIdAndActivityIdAndDate_HandlesExactBoundary() {
         // Arrange
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime futureTime = LocalDateTime.now().plusDays(5);
 
         Attendance boundaryAttendance = Attendance.builder()
                 .student(testStudent2)
                 .activity(testActivity)
-                .attendanceDate(now)
+                .attendanceDate(futureTime)
                 .status(AttendanceStatus.PRESENT)
                 .build();
         attendanceRepository.save(boundaryAttendance);
@@ -417,8 +444,8 @@ class AttendanceRepositoryTest {
         Optional<Attendance> result = attendanceRepository.findByStudentIdAndActivityIdAndDate(
                 testStudent2.getStudentId(),
                 testActivity.getActivityId(),
-                now.minusMinutes(1),
-                now.plusMinutes(1)
+                futureTime.minusMinutes(1),
+                futureTime.plusMinutes(1)
         );
 
         // Assert

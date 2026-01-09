@@ -97,6 +97,9 @@ public class ActivityServiceImpl implements ActivityService {
     }
 
     private String uploadImage(MultipartFile avatar) {
+        if (avatar == null || avatar.isEmpty()) {
+            return null;
+        }
         imageValidator.validate(avatar);
         try {
             Map<?,?> uploadResult = cloudinary.uploader().upload(avatar.getBytes(), ObjectUtils.emptyMap());

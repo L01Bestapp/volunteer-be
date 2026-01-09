@@ -67,12 +67,29 @@ class CertificateRepositoryTest {
                 .build();
         studentRole = roleRepository.save(studentRole);
 
-        // Create organization
+        Role organizationRole = Role.builder()
+                .roleName(RoleEnum.ORGANIZATION.name())
+                .build();
+        organizationRole = roleRepository.save(organizationRole);
+
+        // Create organization with user
+        User orgUser = User.builder()
+                .email("org@test.com")
+                .password("password")
+                .avatarUrl("avatar.png")
+                .roles(List.of(organizationRole))
+                .build();
+
         Organization organization = Organization.builder()
                 .organizationName("Test Organization")
                 .representativeName("John Doe")
                 .representativeEmail("john@test.com")
+                .type(com.ctxh.volunteer.module.organization.enums.OrganizationType.NGO)
+                .user(orgUser)
                 .build();
+
+        orgUser.setOrganization(organization);
+        userRepository.save(orgUser);
         organization = organizationRepository.save(organization);
 
         // Create activity
@@ -470,10 +487,20 @@ class CertificateRepositoryTest {
     @Test
     @DisplayName("Certificate Code - Is unique constraint")
     void certificateCode_IsUnique() {
-        // Arrange
+        // Arrange - Create a new activity for the new enrollment
+        Activity newActivity = Activity.builder()
+                .title("New Test Activity")
+                .shortDescription("New Description")
+                .organization(testActivity.getOrganization())
+                .startDateTime(LocalDateTime.now().plusDays(2))
+                .endDateTime(LocalDateTime.now().plusDays(3))
+                .theNumberOfCtxhDay(1.0)
+                .build();
+        newActivity = activityRepository.save(newActivity);
+
         Enrollment newEnrollment = Enrollment.builder()
                 .student(testStudent)
-                .activity(testActivity)
+                .activity(newActivity)
                 .isCompleted(true)
                 .build();
         newEnrollment = enrollmentRepository.save(newEnrollment);
@@ -481,12 +508,12 @@ class CertificateRepositoryTest {
         Certificate duplicateCert = Certificate.builder()
                 .enrollment(newEnrollment)
                 .studentId(testStudent.getStudentId())
-                .activityId(testActivity.getActivityId())
+                .activityId(newActivity.getActivityId())
                 .studentName(testStudent.getFullName())
                 .studentMssv(testStudent.getMssv())
-                .activityTitle(testActivity.getTitle())
-                .activityStartDate(testActivity.getStartDateTime())
-                .activityEndDate(testActivity.getEndDateTime())
+                .activityTitle(newActivity.getTitle())
+                .activityStartDate(newActivity.getStartDateTime())
+                .activityEndDate(newActivity.getEndDateTime())
                 .ctxhHours(1.0)
                 .organizationName("Test Org")
                 .certificateCode(testCertificate.getCertificateCode()) // Same code!

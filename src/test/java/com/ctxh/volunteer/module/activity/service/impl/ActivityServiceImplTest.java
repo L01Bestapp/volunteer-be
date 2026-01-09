@@ -52,6 +52,12 @@ class ActivityServiceImplTest {
     @Mock
     private EnrollmentRepository enrollmentRepository;
 
+    @Mock
+    private com.ctxh.volunteer.common.util.ImageValidator imageValidator;
+
+    @Mock
+    private com.cloudinary.Cloudinary cloudinary;
+
     @InjectMocks
     private ActivityServiceImpl activityService;
 
