@@ -32,7 +32,7 @@ public interface ActivityService {
     /**
      * Update activity
      */
-    ActivityResponseDto updateActivity(Long organizationId, Long activityId, UpdateActivityRequestDto requestDto);
+    ActivityResponseDto updateActivity(Long organizationId, Long activityId, UpdateActivityRequestDto requestDto, MultipartFile imageFile);
 
     /**
      * Delete activity

@@ -3,7 +3,6 @@ package com.ctxh.volunteer.module.enrollment.service;
 import com.ctxh.volunteer.module.enrollment.dto.EnrollmentRequestDto;
 import com.ctxh.volunteer.module.enrollment.dto.EnrollmentResponseDto;
 import com.ctxh.volunteer.module.enrollment.dto.MyActivityResponseDto;
-import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -17,7 +16,7 @@ public interface EnrollmentService {
     /**
      * Get all enrollment requests by student (all statuses)
      */
-    List<EnrollmentResponseDto> getMyRequests(Long studentId);
+    List<MyActivityResponseDto> getMyRequests(Long studentId);
 
     /**
      * Get approved activities for student

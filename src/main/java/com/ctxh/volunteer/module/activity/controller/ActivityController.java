@@ -17,15 +17,12 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -99,16 +96,18 @@ public class ActivityController {
      * PUT /api/v1/activities/{activityId}
      */
     @Operation(summary = "update activity")
-    @PutMapping("/{activityId}")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
+    @PutMapping(value = "/{activityId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.OK)
-    @PostAuthorize("returnObject.data.organizationId == authentication.name")
+    @PreAuthorize("@activitySecurity.isOwner(#activityId)")
     public ApiResponse<ActivityResponseDto> updateActivity(
-            @RequestParam("organizationId") Long organizationId,
             @PathVariable("activityId") Long activityId,
-            @Valid @RequestBody UpdateActivityRequestDto requestDto) {
+            @Valid @RequestPart("data") UpdateActivityRequestDto requestDto,
+            @RequestPart(value = "image", required = false) MultipartFile image) {
+        Long organizationId = AuthUtil.getIdFromAuthentication();
         return ApiResponse.ok(
                 "Activity updated successfully",
-                activityService.updateActivity(organizationId, activityId, requestDto)
+                activityService.updateActivity(organizationId, activityId, requestDto, image)
         );
     }
 
@@ -118,27 +117,27 @@ public class ActivityController {
      */
     @Operation(summary = "delete activity")
     @DeleteMapping("/{activityId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("@activitySecurity.isOwner(#activityId)")
     public ApiResponse<Void> deleteActivity(
-            @RequestParam("organizationId") Long organizationId,
             @PathVariable("activityId") Long activityId) {
+        Long organizationId = AuthUtil.getIdFromAuthentication();
         activityService.deleteActivity(organizationId, activityId);
-        return ApiResponse.ok("Activity deleted successfully", null);
+        return ApiResponse.ok("Activity deleted successfully");
     }
 
     /**
      * Close activity registration
-     * PATCH /api/v1/activities/{activityId}/close
+     * PUT /api/v1/activities/{activityId}/close
      */
     @Operation(summary = "close activity registration")
-    @PatchMapping("/{activityId}/close")
-    public ApiResponse<ActivityResponseDto> closeActivityRegistration(
-            @RequestParam("organizationId") Long organizationId,
+    @PutMapping("/{activityId}/close")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("@activitySecurity.isOwner(#activityId)")
+    public ApiResponse<Void> closeActivityRegistration(
             @PathVariable("activityId") Long activityId) {
-        return ApiResponse.ok(
-                "Activity registration closed successfully",
-                activityService.closeActivityRegistration(organizationId, activityId)
-        );
+        Long organizationId = AuthUtil.getIdFromAuthentication();
+        activityService.closeActivityRegistration(organizationId, activityId);
+        return ApiResponse.ok("Activity registration closed successfully");
     }
 
     // ============ ENROLLMENT MANAGEMENT ============
@@ -149,6 +148,7 @@ public class ActivityController {
      */
     @Operation(summary = "get all enrollments for an activity")
     @GetMapping("/{activityId}/enrollments")
+    @PreAuthorize("@activitySecurity.isOwner(#activityId) || hasRole('ADMIN')")
     public ApiResponse<List<EnrollmentResponseDto>> getActivityEnrollments(
             @PathVariable("activityId") Long activityId) {
         return ApiResponse.ok(
@@ -163,6 +163,7 @@ public class ActivityController {
      */
     @Operation(summary = "get pending enrollments for an activity")
     @GetMapping("/{activityId}/enrollments/pending")
+    @PreAuthorize("@activitySecurity.isOwner(#activityId) || hasRole('ADMIN')")
     public ApiResponse<List<EnrollmentResponseDto>> getPendingEnrollments(
             @PathVariable("activityId") Long activityId) {
         return ApiResponse.ok(
@@ -177,6 +178,7 @@ public class ActivityController {
      */
     @Operation(summary = "get approved enrollments for an activity")
     @GetMapping("/{activityId}/enrollments/approved")
+    @PreAuthorize("@activitySecurity.isOwner(#activityId) || hasRole('ADMIN')")
     public ApiResponse<List<EnrollmentResponseDto>> getApprovedEnrollments(
             @PathVariable("activityId") Long activityId) {
         return ApiResponse.ok(
@@ -191,6 +193,7 @@ public class ActivityController {
      */
     @Operation(summary = "get rejected enrollments for an activity")
     @GetMapping("/{activityId}/enrollments/rejected")
+    @PreAuthorize("@activitySecurity.isOwner(#activityId) || hasRole('ADMIN')")
     public ApiResponse<List<EnrollmentResponseDto>> getRejectedEnrollments(
             @PathVariable("activityId") Long activityId) {
         return ApiResponse.ok(
@@ -201,14 +204,15 @@ public class ActivityController {
 
     /**
      * Approve an enrollment
-     * PATCH /api/v1/activities/{activityId}/enrollments/{enrollmentId}/approve
+     * PUT /api/v1/activities/{activityId}/enrollments/{enrollmentId}/approve
      */
     @Operation(summary = "approve an enrollment")
-    @PatchMapping("/{activityId}/enrollments/{enrollmentId}/approve")
+    @PutMapping("/{activityId}/enrollments/{enrollmentId}/approve")
+    @PreAuthorize("@activitySecurity.isOwner(#activityId) || hasRole('ADMIN')")
     public ApiResponse<EnrollmentResponseDto> approveEnrollment(
             @PathVariable("activityId") Long activityId,
-            @PathVariable("enrollmentId") Long enrollmentId,
-            @RequestParam("approvedBy") Long approvedByUserId) {
+            @PathVariable("enrollmentId") Long enrollmentId) {
+        Long approvedByUserId = AuthUtil.getIdFromAuthentication();
         return ApiResponse.ok(
                 "Enrollment approved successfully",
                 activityService.approveEnrollment(activityId, enrollmentId, approvedByUserId)
@@ -220,7 +224,8 @@ public class ActivityController {
      * PATCH /api/v1/activities/{activityId}/enrollments/{enrollmentId}/reject
      */
     @Operation(summary = "reject an enrollment")
-    @PatchMapping("/{activityId}/enrollments/{enrollmentId}/reject")
+    @PutMapping("/{activityId}/enrollments/{enrollmentId}/reject")
+    @PreAuthorize("@activitySecurity.isOwner(#activityId) || hasRole('ADMIN')")
     public ApiResponse<EnrollmentResponseDto> rejectEnrollment(
             @PathVariable("activityId") Long activityId,
             @PathVariable("enrollmentId") Long enrollmentId,

@@ -2,6 +2,7 @@ package com.ctxh.volunteer.module.student.service.impl;
 
 import com.ctxh.volunteer.common.exception.BusinessException;
 import com.ctxh.volunteer.common.exception.ErrorCode;
+import com.ctxh.volunteer.common.util.AuthUtil;
 import com.ctxh.volunteer.module.attendance.entity.Attendance;
 import com.ctxh.volunteer.module.attendance.repository.AttendanceRepository;
 import com.ctxh.volunteer.module.auth.RoleEnum;
@@ -225,6 +226,18 @@ public class StudentServiceImpl implements StudentService {
         return studentRepository.findAll().stream()
                 .map(this::mapToStudentResponseDto)
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public StudentResponseDto getMyQrCode() {
+        Long studentId = AuthUtil.getIdFromAuthentication();
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.STUDENT_NOT_FOUND));
+
+        student.generateQrCode();
+        studentRepository.save(student);
+        return mapToStudentResponseDto(student);
     }
 
 

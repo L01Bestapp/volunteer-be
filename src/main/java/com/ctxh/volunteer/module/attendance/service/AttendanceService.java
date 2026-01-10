@@ -15,7 +15,7 @@ public interface AttendanceService {
     /**
      * Check-in student using QR code
      */
-    AttendanceResponseDto checkIn(@Valid QrCheckInRequestDto requestDto);
+    AttendanceResponseDto checkIn(QrCheckInRequestDto requestDto);
 
     /**
      * Check out student using QR code

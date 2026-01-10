@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -37,6 +38,7 @@ public class AttendanceController {
     @Operation(summary = "check-in student using QR code")
     @PostMapping("/attendance/check-in")
     @ResponseStatus(HttpStatus.OK)
+    @PostAuthorize("@activitySecurity.isOwner(#requestDto.activityId)")
     public ApiResponse<AttendanceResponseDto> checkIn(
             @Valid @RequestBody QrCheckInRequestDto requestDto) {
         return ApiResponse.ok(

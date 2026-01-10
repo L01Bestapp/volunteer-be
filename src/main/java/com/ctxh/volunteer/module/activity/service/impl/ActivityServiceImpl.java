@@ -23,7 +23,6 @@ import com.ctxh.volunteer.module.enrollment.entity.Enrollment;
 import com.ctxh.volunteer.module.enrollment.repository.EnrollmentRepository;
 import com.ctxh.volunteer.module.organization.entity.Organization;
 import com.ctxh.volunteer.module.organization.repository.OrganizationRepository;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
@@ -139,7 +138,7 @@ public class ActivityServiceImpl implements ActivityService {
 
     @Override
     @Transactional
-    public ActivityResponseDto updateActivity(Long organizationId, Long activityId, @Valid UpdateActivityRequestDto requestDto) {
+    public ActivityResponseDto updateActivity(Long organizationId, Long activityId,UpdateActivityRequestDto requestDto, MultipartFile imageFile) {
         // Find activity and verify ownership
         Activity activity = activityRepository.findByIdAndOrganizationId(activityId, organizationId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ACTIVITY_NOT_FOUND));
@@ -175,7 +174,7 @@ public class ActivityServiceImpl implements ActivityService {
             activity.setAddress(requestDto.getAddress());
         }
         if (requestDto.getMaxParticipants() != null) {
-            activity.setMaxParticipants(requestDto.getMaxParticipants());
+            activity.updateMaxParticipants(requestDto.getMaxParticipants());
         }
         if (requestDto.getRequirements() != null) {
             activity.setRequirements(requestDto.getRequirements());
@@ -188,9 +187,14 @@ public class ActivityServiceImpl implements ActivityService {
         if (activity.getEndDateTime().isBefore(activity.getStartDateTime())) {
             throw new BusinessException(ErrorCode.INVALID_ACTIVITY_DATE);
         }
+        if (imageFile != null && !imageFile.isEmpty()) {
+            String imageUrl = uploadImage(imageFile);
+            activity.setImageUrl(imageUrl);
+        }
 
         Activity updatedActivity = activityRepository.save(activity);
         log.info("Updated activity with ID: {}", activityId);
+
 
         return mapToActivityResponseDto(updatedActivity);
     }
@@ -417,7 +421,7 @@ public class ActivityServiceImpl implements ActivityService {
                 .registrationDeadline(activity.getRegistrationDeadline())
                 .address(activity.getAddress())
                 .maxParticipants(activity.getMaxParticipants())
-                .currentParticipants(activity.getCurrentParticipants())
+                .numRegistrationCurrently(activity.getCurrentParticipants())
                 .pendingParticipants(activity.getPendingParticipants())
                 .approvedParticipants(activity.getApprovedParticipants())
                 .remainingSlots(activity.getRemainingSlots())

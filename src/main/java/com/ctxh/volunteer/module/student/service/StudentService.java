@@ -31,6 +31,8 @@ public interface StudentService {
     List<CertificateResponseDto> getStudentCertificates(Long studentId);
 
     List<StudentResponseDto> getAllStudents();
+
+    StudentResponseDto getMyQrCode();
     //  --------------------------------------------------------------
 
 }

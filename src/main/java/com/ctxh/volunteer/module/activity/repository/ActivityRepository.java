@@ -1,6 +1,7 @@
 package com.ctxh.volunteer.module.activity.repository;
 
 import com.ctxh.volunteer.module.activity.entity.Activity;
+import com.ctxh.volunteer.module.organization.entity.Organization;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -45,4 +46,6 @@ public interface ActivityRepository extends JpaRepository<Activity, Long>, JpaSp
             "AND a.activityStatus = 'UPCOMING' " +
             "ORDER BY a.createAt DESC ")
     List<Activity> searchByKeyword(@Param("keyword") String keyword);
+
+    boolean existsByActivityIdAndOrganization_OrganizationId(Long activityId, Long organizationOrganizationId);
 }

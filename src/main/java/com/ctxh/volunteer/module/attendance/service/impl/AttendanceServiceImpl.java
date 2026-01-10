@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -41,7 +42,9 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     @Override
     @Transactional
-    public AttendanceResponseDto checkIn(@Valid QrCheckInRequestDto requestDto) {
+    public AttendanceResponseDto checkIn(QrCheckInRequestDto requestDto) {
+        LocalDateTime now = LocalDateTime.now();
+
         // Find student by QR code
         Student student = studentRepository.findByQrCodeData(requestDto.getQrCodeData())
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_QR_CODE));
@@ -49,6 +52,12 @@ public class AttendanceServiceImpl implements AttendanceService {
         // Find activity
         Activity activity = activityRepository.findById(requestDto.getActivityId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.ACTIVITY_NOT_FOUND));
+
+
+        LocalDateTime middleOfActivity = activity.getStartDateTime()
+                .plusSeconds(Duration.between(activity.getStartDateTime(), activity.getEndDateTime()).getSeconds() / 2);
+        if (now.isAfter(middleOfActivity))
+            throw new BusinessException(ErrorCode.EXPIRED_CHECK_IN);
 
         // Verify student is enrolled and approved
         enrollmentRepository.findByStudentIdAndActivityId(student.getStudentId(), activity.getActivityId())
@@ -93,7 +102,7 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     @Override
     @Transactional
-    public AttendanceResponseDto checkOut(@Valid QrCheckOutRequestDto requestDto) {
+    public AttendanceResponseDto checkOut(QrCheckOutRequestDto requestDto) {
         // Find student by QR code
         Student student = studentRepository.findByQrCodeData(requestDto.getQrCodeData())
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_QR_CODE));
@@ -101,6 +110,10 @@ public class AttendanceServiceImpl implements AttendanceService {
         // Find activity
         Activity activity = activityRepository.findById(requestDto.getActivityId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.ACTIVITY_NOT_FOUND));
+
+        LocalDateTime now = LocalDateTime.now();
+        if (now.isAfter(activity.getEndDateTime().plusDays(2)))
+            throw new BusinessException(ErrorCode.EXPIRED_CHECK_OUT);
 
         // Find attendance record for today
         LocalDateTime today = LocalDate.now().atStartOfDay();

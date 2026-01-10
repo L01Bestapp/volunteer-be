@@ -79,6 +79,8 @@ public enum ErrorCode {
     ACTIVITY_NOT_OPEN_FOR_ENROLLMENT(1512, "Activity is not open for enrollment", HttpStatus.BAD_REQUEST),
     ACTIVITY_REGISTRATION_DEADLINE_PASSED(1513, "Activity registration deadline has passed", HttpStatus.BAD_REQUEST),
     ACTIVITY_MAX_PENDING_REACHED(1514, "Activity has reached maximum pending enrollments", HttpStatus.BAD_REQUEST),
+    ACTIVITY_ERROR_UPDATE_MAX_PARTICIPANTS(1515, "max participants cannot lower approved participants", HttpStatus.BAD_REQUEST),
+
 
     // ============ ENROLLMENT ERRORS (1600-1699) ============
     ENROLLMENT_NOT_FOUND(1600, "Enrollment not found", HttpStatus.NOT_FOUND),
@@ -101,6 +103,9 @@ public enum ErrorCode {
     QR_CODE_EXPIRED(1705, "QR code has expired", HttpStatus.BAD_REQUEST),
     ATTENDANCE_NOT_ALLOWED(1706, "Attendance is not allowed at this time", HttpStatus.BAD_REQUEST),
     STUDENT_NOT_ENROLLED(1707, "Student is not enrolled in this activity", HttpStatus.BAD_REQUEST),
+    EXPIRED_CHECK_IN(1708, "Check-in has expired", HttpStatus.BAD_REQUEST),
+    EXPIRED_CHECK_OUT(1709, "Check-out has expired", HttpStatus.BAD_REQUEST),
+
 
     // ============ CERTIFICATE ERRORS (1800-1899) ============
     CERTIFICATE_NOT_FOUND(1800, "Certificate not found", HttpStatus.NOT_FOUND),

@@ -75,7 +75,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<EnrollmentResponseDto> getMyRequests(Long studentId) {
+    public List<MyActivityResponseDto> getMyRequests(Long studentId) {
         // Verify student exists
         if (!studentRepository.existsById(studentId)) {
             throw new BusinessException(ErrorCode.STUDENT_NOT_FOUND);
@@ -83,7 +83,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
 
         List<Enrollment> enrollments = enrollmentRepository.findByStudentId(studentId);
         return enrollments.stream()
-                .map(this::mapToEnrollmentResponseDto)
+                .map(this::mapToMyActivityResponseDto)
                 .toList();
     }
 

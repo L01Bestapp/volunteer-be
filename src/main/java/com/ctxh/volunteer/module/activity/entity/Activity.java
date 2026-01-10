@@ -144,6 +144,8 @@ public class Activity extends BaseEntity {
     private List<Attendance> attendances = new ArrayList<>();
     // ============ HELPER METHODS ============
 
+
+
     /**
      * Check if a new registration is allowed (for PENDING)
      */
@@ -172,6 +174,13 @@ public class Activity extends BaseEntity {
         int maxRegistrations = maxParticipants * REGISTRATION_MULTIPLIER;
 
         return currentParticipants < maxRegistrations;
+    }
+
+    public void updateMaxParticipants(Integer maxParticipants) {
+        if (maxParticipants != null && maxParticipants < approvedParticipants) {
+            throw new BusinessException(ErrorCode.ACTIVITY_ERROR_UPDATE_MAX_PARTICIPANTS);
+        }
+        this.maxParticipants = maxParticipants;
     }
 
     /**

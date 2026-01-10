@@ -31,7 +31,7 @@ public class ActivityResponseDto {
     private LocalDateTime registrationDeadline;
     private String address;
     private Integer maxParticipants;
-    private Integer currentParticipants;
+    private Integer numRegistrationCurrently;
     private Integer pendingParticipants;
     private Integer approvedParticipants;
     private Integer remainingSlots;

@@ -12,6 +12,8 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -44,6 +46,13 @@ public class StudentController {
                 studentService.registerStudent(requestDto)
         );
     }
+
+    @GetMapping("/my-qr")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ApiResponse<StudentResponseDto> getMyQrCode(){
+        return ApiResponse.ok("get qr success",studentService.getMyQrCode());
+    }
+
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)

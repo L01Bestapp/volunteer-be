@@ -22,6 +22,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -140,7 +141,7 @@ public class AuthController {
     @Operation(summary = "Upload avatar", description = "Upload profile image for authenticated user")
     @SecurityRequirement(name = "bearerAuth")
     @PostAuthorize("returnObject.data == authentication.name")
-    @PatchMapping(value = "/me/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PutMapping(value = "/me/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<String> uploadImage(@RequestPart("avatar") MultipartFile avatar) {
         return ApiResponse.ok("Image uploaded successfully", authService.uploadImage(avatar));
     }
