@@ -1,6 +1,7 @@
 package com.ctxh.volunteer.module.student.controller;
 
 import com.ctxh.volunteer.common.dto.ApiResponse;
+import com.ctxh.volunteer.common.util.AuthUtil;
 import com.ctxh.volunteer.module.certificate.dto.CertificateResponseDto;
 import com.ctxh.volunteer.module.student.dto.response.ParticipationHistoryDto;
 import com.ctxh.volunteer.module.student.dto.request.CreateStudentRequestDto;
@@ -120,8 +121,9 @@ public class StudentController {
      */
     @Operation(summary = "get student's certificates")
     @GetMapping("/certificates")
-    public ApiResponse<List<CertificateResponseDto>> getStudentCertificates(
-            @RequestParam("studentId") Long studentId) {
+    @PreAuthorize("hasRole('STUDENT')")
+    public ApiResponse<List<CertificateResponseDto>> getStudentCertificates() {
+        Long studentId = AuthUtil.getIdFromAuthentication();
         return ApiResponse.ok(
                 "Certificates retrieved successfully",
                 studentService.getStudentCertificates(studentId)
