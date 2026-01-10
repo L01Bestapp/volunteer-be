@@ -65,6 +65,10 @@ public class User extends BaseEntity {
     @Builder.Default
     private Boolean isLocked = false;
 
+    @Column(name = "is_banned", nullable = false)
+    @Builder.Default
+    private Boolean isBanned = false;
+
     @Column(name = "failed_login_attempts")
     @Builder.Default
     private Integer failedLoginAttempts = 0;
@@ -135,6 +139,14 @@ public class User extends BaseEntity {
 
     public void removeRole(Role role) {
         this.roles.remove(role);
+    }
+
+    public void banUser(){
+        this.isBanned = true;
+    }
+
+    public void unBanUser(){
+        this.isBanned = false;
     }
 
     /**

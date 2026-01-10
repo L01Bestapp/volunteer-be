@@ -1,20 +1,24 @@
 package com.ctxh.volunteer.module.activity.controller;
 
 import com.ctxh.volunteer.common.dto.ApiResponse;
+import com.ctxh.volunteer.common.util.AuthUtil;
 import com.ctxh.volunteer.module.activity.dto.request.CreateActivityRequestDto;
 import com.ctxh.volunteer.module.activity.dto.request.UpdateActivityRequestDto;
 import com.ctxh.volunteer.module.activity.dto.response.ActivityListResponseDto;
 import com.ctxh.volunteer.module.activity.dto.response.ActivityResponseDto;
 import com.ctxh.volunteer.module.activity.enums.ActivityCategory;
-import com.ctxh.volunteer.module.activity.enums.ActivityStatus;
+import com.ctxh.volunteer.module.activity.enums.RegistrationState;
 import com.ctxh.volunteer.module.activity.service.ActivityService;
 import com.ctxh.volunteer.module.enrollment.dto.EnrollmentResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -47,14 +51,14 @@ public class ActivityController {
     @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ORGANIZATION')")
     public ApiResponse<ActivityResponseDto> createActivity(
-            @RequestParam("organizationId") Long organizationId,
             @Valid @RequestPart("data") CreateActivityRequestDto requestDto,
             @RequestPart(value = "image", required = false) MultipartFile imageFile
             ) {
         return ApiResponse.ok(
                 "Activity created successfully",
-                activityService.createActivity(organizationId, requestDto, imageFile)
+                activityService.createActivity(requestDto, imageFile)
         );
     }
 
@@ -63,9 +67,11 @@ public class ActivityController {
      * GET /api/v1/activities?organizationId={organizationId}
      */
     @Operation(summary = "get all activities of an organization")
-    @GetMapping
-    public ApiResponse<List<ActivityListResponseDto>> getActivitiesByOrganization(
-            @RequestParam("organizationId") Long organizationId) {
+    @GetMapping("/get-all-activity-for-organization")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasRole('ORGANIZATION')")
+    public ApiResponse<List<ActivityListResponseDto>> getAllActivitiesByOrganization() {
+        Long organizationId = AuthUtil.getIdFromAuthentication();
         return ApiResponse.ok(
                 "Activities retrieved successfully",
                 activityService.getActivitiesByOrganization(organizationId)
@@ -78,6 +84,8 @@ public class ActivityController {
      */
     @Operation(summary = "get activity by ID")
     @GetMapping("/{activityId}")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ORGANIZATION','STUDENT','ADMIN')")
     public ApiResponse<ActivityResponseDto> getActivityById(
             @PathVariable("activityId") Long activityId) {
         return ApiResponse.ok(
@@ -92,6 +100,8 @@ public class ActivityController {
      */
     @Operation(summary = "update activity")
     @PutMapping("/{activityId}")
+    @ResponseStatus(HttpStatus.OK)
+    @PostAuthorize("returnObject.data.organizationId == authentication.name")
     public ApiResponse<ActivityResponseDto> updateActivity(
             @RequestParam("organizationId") Long organizationId,
             @PathVariable("activityId") Long activityId,
@@ -224,15 +234,17 @@ public class ActivityController {
     // ============ STUDENT DISCOVERY APIs ============
 
     /**
-     * Browse available activities
-     * GET /api/v1/activities/available
+     * Browse activities
+     * GET /api/v1/activities
      */
-    @Operation(summary = "get all available activities for students")
-    @GetMapping("/available")
-    public ApiResponse<List<ActivityListResponseDto>> getAvailableActivities() {
+    @Operation(summary = "get all activities for students")
+    @GetMapping()
+    @SecurityRequirement(name = "bearerAuth")
+    @PreAuthorize("hasAnyRole('STUDENT','ORGANIZATION')")
+    public ApiResponse<List<ActivityListResponseDto>> getAllActivities() {
         return ApiResponse.ok(
-                "Available activities retrieved successfully",
-                activityService.getAvailableActivities()
+                "activities retrieved successfully",
+                activityService.getAllActivity()
         );
     }
 
@@ -254,15 +266,16 @@ public class ActivityController {
      * Get activity detail
      * GET /api/v1/activities/{activityId}/detail
      */
-    @Operation(summary = "get activity detail for students")
-    @GetMapping("/{activityId}/detail")
-    public ApiResponse<ActivityResponseDto> getActivityDetail(
-            @PathVariable("activityId") Long activityId) {
-        return ApiResponse.ok(
-                "Activity detail retrieved successfully",
-                activityService.getActivityDetail(activityId)
-        );
-    }
+//    @Operation(summary = "get activity detail for students")
+//    @GetMapping("/{activityId}/detail")
+//    @PreAuthorize("hasAnyRole('STUDENT','ORGANIZATION')")
+//    public ApiResponse<ActivityResponseDto> getActivityDetail(
+//            @PathVariable("activityId") Long activityId) {
+//        return ApiResponse.ok(
+//                "Activity detail retrieved successfully",
+//                activityService.getActivityDetail(activityId)
+//        );
+//    }
 
     /**
      * Advanced search activities
@@ -273,7 +286,7 @@ public class ActivityController {
     public ApiResponse<List<ActivityListResponseDto>> searchActivitiesAdvanced(
             @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "category", required = false) ActivityCategory category,
-            @RequestParam(value = "status", required = false) ActivityStatus status,
+            @RequestParam(value = "status", required = false) RegistrationState status,
             @RequestParam(value = "startDate", required = false) LocalDate startDate,
             @RequestParam(value = "endDate", required = false) LocalDate endDate) {
 

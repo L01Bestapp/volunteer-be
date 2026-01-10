@@ -8,6 +8,7 @@ import com.ctxh.volunteer.module.student.dto.request.UpdateStudentRequestDto;
 import com.ctxh.volunteer.module.student.dto.response.StudentResponseDto;
 import com.ctxh.volunteer.module.student.service.StudentService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -35,6 +36,7 @@ public class StudentController {
      */
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
+    @SecurityRequirements()
     public ApiResponse<StudentResponseDto> createStudent(
             @Valid @RequestBody CreateStudentRequestDto requestDto) {
         return ApiResponse.ok(

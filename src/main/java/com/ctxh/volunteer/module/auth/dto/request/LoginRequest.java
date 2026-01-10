@@ -14,11 +14,11 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class LoginRequest {
-    @Schema(description = "User's email address", example = "thangvip030201@gmail.com")
+    @Schema(description = "User's email address", example = "thang.vokhmt04k22@hcmut.edu.vn")
     @NotBlank(message = "Email is required")
     private String email;
 
-    @Schema(description = "User's password", example = "thangvip030201")
+    @Schema(description = "User's password", example = "thangvip123")
     @NotBlank(message = "Password is required")
     private String password;
 }

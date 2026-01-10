@@ -2,6 +2,7 @@ package com.ctxh.volunteer.module.activity.dto.response;
 
 import com.ctxh.volunteer.module.activity.enums.ActivityCategory;
 import com.ctxh.volunteer.module.activity.enums.ActivityStatus;
+import com.ctxh.volunteer.module.activity.enums.RegistrationState;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,6 +22,7 @@ public class ActivityListResponseDto {
     private String shortDescription;
     private String imageUrl;
     private ActivityCategory category;
+    private LocalDateTime registrationDeadline;
     private Double theNumberOfCtxhDay;
     private LocalDateTime startDateTime;
     private LocalDateTime endDateTime;
@@ -28,6 +30,7 @@ public class ActivityListResponseDto {
     private Integer maxParticipants;
     private Integer approvedParticipants;
     private Integer remainingSlots;
-    private ActivityStatus status;
+    private RegistrationState registrationState;
+    private ActivityStatus activityStatus;
     private LocalDateTime createdAt;
 }

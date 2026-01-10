@@ -12,7 +12,7 @@ public interface EnrollmentService {
     /**
      * Enroll in an activity
      */
-    EnrollmentResponseDto enrollInActivity(Long studentId, @Valid EnrollmentRequestDto requestDto);
+    EnrollmentResponseDto enrollInActivity(Long studentId,EnrollmentRequestDto requestDto);
 
     /**
      * Get all enrollment requests by student (all statuses)

@@ -5,9 +5,8 @@ import com.ctxh.volunteer.module.activity.dto.request.UpdateActivityRequestDto;
 import com.ctxh.volunteer.module.activity.dto.response.ActivityListResponseDto;
 import com.ctxh.volunteer.module.activity.dto.response.ActivityResponseDto;
 import com.ctxh.volunteer.module.activity.enums.ActivityCategory;
-import com.ctxh.volunteer.module.activity.enums.ActivityStatus;
+import com.ctxh.volunteer.module.activity.enums.RegistrationState;
 import com.ctxh.volunteer.module.enrollment.dto.EnrollmentResponseDto;
-import jakarta.validation.Valid;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
@@ -18,7 +17,7 @@ public interface ActivityService {
     /**
      * Create a new activity
      */
-    ActivityResponseDto createActivity(Long organizationId, @Valid CreateActivityRequestDto requestDto, MultipartFile imageFile);
+    ActivityResponseDto createActivity(CreateActivityRequestDto requestDto, MultipartFile imageFile);
 
     /**
      * Get all activities of an organization
@@ -33,7 +32,7 @@ public interface ActivityService {
     /**
      * Update activity
      */
-    ActivityResponseDto updateActivity(Long organizationId, Long activityId, @Valid UpdateActivityRequestDto requestDto);
+    ActivityResponseDto updateActivity(Long organizationId, Long activityId, UpdateActivityRequestDto requestDto);
 
     /**
      * Delete activity
@@ -82,7 +81,7 @@ public interface ActivityService {
     /**
      * Get all available activities (OPEN status, not past registration deadline)
      */
-    List<ActivityListResponseDto> getAvailableActivities();
+    List<ActivityListResponseDto> getAllActivity();
 
     /**
      * Simple search activities by keyword
@@ -97,7 +96,7 @@ public interface ActivityService {
     List<ActivityListResponseDto> searchActivitiesAdvanced(
             String keyword,
             ActivityCategory category,
-            ActivityStatus status,
+            RegistrationState status,
             LocalDate startDate,
             LocalDate endDate);
 

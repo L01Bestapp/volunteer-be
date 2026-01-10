@@ -1,7 +1,7 @@
 package com.ctxh.volunteer.module.enrollment.dto;
 
 import com.ctxh.volunteer.module.activity.enums.ActivityCategory;
-import com.ctxh.volunteer.module.activity.enums.ActivityStatus;
+import com.ctxh.volunteer.module.activity.enums.RegistrationState;
 import com.ctxh.volunteer.module.enrollment.EnrollmentStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,7 +29,7 @@ public class MyActivityResponseDto {
     private String activityTitle;
     private String shortDescription;
     private ActivityCategory category;
-    private ActivityStatus activityStatus;
+    private RegistrationState registrationState;
     private LocalDateTime startDateTime;
     private LocalDateTime endDateTime;
     private String address;

@@ -1,14 +1,17 @@
 package com.ctxh.volunteer.module.enrollment.controller;
 
 import com.ctxh.volunteer.common.dto.ApiResponse;
+import com.ctxh.volunteer.common.util.AuthUtil;
 import com.ctxh.volunteer.module.enrollment.dto.EnrollmentRequestDto;
 import com.ctxh.volunteer.module.enrollment.dto.EnrollmentResponseDto;
 import com.ctxh.volunteer.module.enrollment.dto.MyActivityResponseDto;
 import com.ctxh.volunteer.module.enrollment.service.EnrollmentService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -35,9 +38,10 @@ public class EnrollmentController {
     @Operation(summary = "enroll in an activity")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('STUDENT')")
     public ApiResponse<EnrollmentResponseDto> enrollInActivity(
-            @RequestParam("studentId") Long studentId,
             @Valid @RequestBody EnrollmentRequestDto requestDto) {
+        Long studentId = AuthUtil.getIdFromAuthentication();
         return ApiResponse.ok(
                 "Enrollment request submitted successfully",
                 enrollmentService.enrollInActivity(studentId, requestDto)

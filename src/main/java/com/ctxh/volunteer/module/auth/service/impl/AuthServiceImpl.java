@@ -45,7 +45,6 @@ import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -68,7 +67,6 @@ public class AuthServiceImpl implements AuthService {
     private final RoleRepository roleRepository;
     private final MailService mailService;
     private final IntrospectToken introspectToken;
-    private final ClientRegistrationRepository clientRegistrationRepository;
     private final WebClient webClient;
     private final RSAKeyRecord rsaKeyRecord;
     private final StudentRepository studentRepository;
@@ -412,6 +410,27 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
+    @Override
+    @Transactional
+    public void banUser(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new BusinessException(ErrorCode.USER_NOT_FOUND)
+        );
+        user.banUser();
+        userRepository.save(user);
+    }
+
+    @Override
+    @Transactional
+    public void unBanUser(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new BusinessException(ErrorCode.USER_NOT_FOUND)
+        );
+        user.unBanUser();
+        userRepository.save(user);
+    }
+
+
     private Map<String, Object> verifyTokenWithGoogle(String idToken) {
         try {
             String googleTokenInfoUrl = "https://oauth2.googleapis.com/tokeninfo?id_token=" + idToken;
@@ -464,9 +483,9 @@ public class AuthServiceImpl implements AuthService {
         return user;
     }
 
-    private void sendEmailVerification(User user) {
+    public void sendEmailVerification(User user) {
         String tokenVerify = generateToken(user, PurposeToken.VERIFY_EMAIL);
-        String linkConfirm = baseUrl + "/auth/verify-email?token=" + tokenVerify;
+        String linkConfirm = baseUrl + "/api/v1" + "/auth/verify-email?token=" + tokenVerify;
         try {
             mailService.sendEmail(user.getEmail(), linkConfirm, EmailTemplates.VERIFY_EMAIL_TEMPLATE);
         } catch (MessagingException | UnsupportedEncodingException e) {

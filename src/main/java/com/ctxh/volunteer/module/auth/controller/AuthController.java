@@ -18,6 +18,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -43,6 +44,27 @@ public class AuthController {
     public ApiResponse<TokenResponse> login(@RequestBody @Valid LoginRequest request) {
         return ApiResponse.ok("User login success", authService.login(request));
     }
+
+    @Operation(summary = "Ban user", description = "Ban user from using the application")
+    @SecurityRequirement(name = "bearerAuth")
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/ban-user")
+    public ApiResponse<Void> banUser(@RequestParam("userId") Long userId){
+        authService.banUser(userId);
+        return ApiResponse.ok("User banned successfully");
+    }
+
+
+    @Operation(summary = "Unlock Ban user", description = "Unlock Ban user from using the application")
+    @SecurityRequirement(name = "bearerAuth")
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/un-ban-user")
+    public ApiResponse<Void> unlockBanUser(@RequestParam("userId") Long userId){
+        authService.unBanUser(userId);
+        return ApiResponse.ok("User unban successfully");
+    }
+
+
 
     @Operation(description = "Login with Google", summary = "Authenticate with Google and return JWT tokens")
     @SecurityRequirements()

@@ -20,11 +20,11 @@ import java.time.LocalDateTime;
 public class BaseEntity {
     @CreatedBy
     @Column(name = "create_by", updatable = false)
-    private String createBy;
+    private Long createBy;
 
     @LastModifiedBy
     @Column(name = "update_by", insertable = false)
-    private String updateBy;
+    private Long updateBy;
 
     @CreatedDate
     @Column(name = "create_at", updatable = false)

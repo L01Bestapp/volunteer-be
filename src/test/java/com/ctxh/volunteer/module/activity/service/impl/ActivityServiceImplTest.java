@@ -8,9 +8,8 @@ import com.ctxh.volunteer.module.activity.dto.response.ActivityListResponseDto;
 import com.ctxh.volunteer.module.activity.dto.response.ActivityResponseDto;
 import com.ctxh.volunteer.module.activity.entity.Activity;
 import com.ctxh.volunteer.module.activity.enums.ActivityCategory;
-import com.ctxh.volunteer.module.activity.enums.ActivityStatus;
+import com.ctxh.volunteer.module.activity.enums.RegistrationState;
 import com.ctxh.volunteer.module.activity.repository.ActivityRepository;
-import com.ctxh.volunteer.module.activity.specification.ActivitySpecification;
 import com.ctxh.volunteer.module.enrollment.EnrollmentStatus;
 import com.ctxh.volunteer.module.enrollment.dto.EnrollmentResponseDto;
 import com.ctxh.volunteer.module.enrollment.entity.Enrollment;
@@ -91,7 +90,7 @@ class ActivityServiceImplTest {
                 .pendingParticipants(0)
                 .approvedParticipants(0)
                 .theNumberOfCtxhDay(1.0)
-                .status(ActivityStatus.OPEN)
+                .status(RegistrationState.OPEN)
                 .build();
 
         // Create request DTOs
@@ -121,7 +120,7 @@ class ActivityServiceImplTest {
         when(activityRepository.save(any(Activity.class))).thenReturn(testActivity);
 
         // Act
-        ActivityResponseDto response = activityService.createActivity(1L, createRequest, null);
+        ActivityResponseDto response = activityService.createActivity(createRequest, null);
 
         // Assert
         assertThat(response).isNotNull();
@@ -139,7 +138,7 @@ class ActivityServiceImplTest {
         when(organizationRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThatThrownBy(() -> activityService.createActivity(999L, createRequest, null))
+        assertThatThrownBy(() -> activityService.createActivity( createRequest, null))
                 .isInstanceOf(BusinessException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.ORGANIZATION_NOT_FOUND);
 
@@ -157,7 +156,7 @@ class ActivityServiceImplTest {
         when(organizationRepository.findById(1L)).thenReturn(Optional.of(testOrganization));
 
         // Act & Assert
-        assertThatThrownBy(() -> activityService.createActivity(1L, createRequest, null))
+        assertThatThrownBy(() -> activityService.createActivity(createRequest, null))
                 .isInstanceOf(BusinessException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_ACTIVITY_DATE);
 
@@ -174,7 +173,7 @@ class ActivityServiceImplTest {
         when(organizationRepository.findById(1L)).thenReturn(Optional.of(testOrganization));
 
         // Act & Assert
-        assertThatThrownBy(() -> activityService.createActivity(1L, createRequest, null))
+        assertThatThrownBy(() -> activityService.createActivity( createRequest, null))
                 .isInstanceOf(BusinessException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_REGISTRATION_DEADLINE);
 
@@ -296,7 +295,7 @@ class ActivityServiceImplTest {
     @DisplayName("Update Activity - Fails when activity already completed")
     void updateActivity_ThrowsException_WhenActivityCompleted() {
         // Arrange
-        testActivity.setStatus(ActivityStatus.COMPLETED);
+        testActivity.setRegistrationState(RegistrationState.COMPLETED);
         when(activityRepository.findByIdAndOrganizationId(1L, 1L)).thenReturn(Optional.of(testActivity));
 
         // Act & Assert
@@ -362,7 +361,7 @@ class ActivityServiceImplTest {
     @DisplayName("Delete Activity - Fails when activity already completed")
     void deleteActivity_ThrowsException_WhenActivityCompleted() {
         // Arrange
-        testActivity.setStatus(ActivityStatus.COMPLETED);
+        testActivity.setRegistrationState(RegistrationState.COMPLETED);
         when(activityRepository.findByIdAndOrganizationId(1L, 1L)).thenReturn(Optional.of(testActivity));
 
         // Act & Assert
@@ -379,7 +378,7 @@ class ActivityServiceImplTest {
     void deleteActivity_ThrowsException_WhenActivityStarted() {
         // Arrange
         Activity mockActivity = mock(Activity.class);
-        when(mockActivity.getStatus()).thenReturn(ActivityStatus.OPEN);
+        when(mockActivity.getRegistrationState()).thenReturn(RegistrationState.OPEN);
         when(mockActivity.hasStarted()).thenReturn(true);
 
         when(activityRepository.findByIdAndOrganizationId(1L, 1L)).thenReturn(Optional.of(mockActivity));
@@ -400,7 +399,7 @@ class ActivityServiceImplTest {
     void closeRegistration_Success_ClosesRegistration() {
         // Arrange
         Activity mockActivity = mock(Activity.class);
-        when(mockActivity.getStatus()).thenReturn(ActivityStatus.OPEN);
+        when(mockActivity.getRegistrationState()).thenReturn(RegistrationState.OPEN);
         when(mockActivity.getActivityId()).thenReturn(1L);
         when(mockActivity.getOrganization()).thenReturn(testOrganization);
 
@@ -434,7 +433,7 @@ class ActivityServiceImplTest {
     @DisplayName("Close Registration - Fails when activity not open or full")
     void closeRegistration_ThrowsException_WhenActivityNotOpenOrFull() {
         // Arrange
-        testActivity.setStatus(ActivityStatus.CLOSED);
+        testActivity.setRegistrationState(RegistrationState.CLOSED);
         when(activityRepository.findByIdAndOrganizationId(1L, 1L)).thenReturn(Optional.of(testActivity));
 
         // Act & Assert
@@ -571,19 +570,19 @@ class ActivityServiceImplTest {
 
     @Test
     @DisplayName("Get Available Activities - Success returns available activities")
-    void getAvailableActivities_Success_ReturnsAvailableActivities() {
+    void getAvailableActivities_Success_ReturnsAllActivity() {
         // Arrange
-        when(activityRepository.findAvailableActivities(any(LocalDateTime.class)))
+        when(activityRepository.findAllActivityOrderByDESC())
                 .thenReturn(List.of(testActivity));
 
         // Act
-        List<ActivityListResponseDto> result = activityService.getAvailableActivities();
+        List<ActivityListResponseDto> result = activityService.getAllActivity();
 
         // Assert
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getActivityId()).isEqualTo(testActivity.getActivityId());
 
-        verify(activityRepository).findAvailableActivities(any(LocalDateTime.class));
+        verify(activityRepository).findAllActivityOrderByDESC();
     }
 
     @Test
@@ -606,7 +605,7 @@ class ActivityServiceImplTest {
     @DisplayName("Search Activities - Returns all when keyword is empty")
     void searchActivities_ReturnsAll_WhenKeywordEmpty() {
         // Arrange
-        when(activityRepository.findAvailableActivities(any(LocalDateTime.class)))
+        when(activityRepository.findAllActivityOrderByDESC())
                 .thenReturn(List.of(testActivity));
 
         // Act
@@ -614,7 +613,7 @@ class ActivityServiceImplTest {
 
         // Assert
         assertThat(result).hasSize(1);
-        verify(activityRepository).findAvailableActivities(any(LocalDateTime.class));
+        verify(activityRepository).findAllActivityOrderByDESC();
         verify(activityRepository, never()).searchByKeyword(anyString());
     }
 
@@ -628,7 +627,7 @@ class ActivityServiceImplTest {
         List<ActivityListResponseDto> result = activityService.searchActivitiesAdvanced(
                 "test",
                 ActivityCategory.EDUCATION_SUPPORT,
-                ActivityStatus.OPEN,
+                RegistrationState.OPEN,
                 LocalDate.now(),
                 LocalDate.now().plusDays(30)
         );

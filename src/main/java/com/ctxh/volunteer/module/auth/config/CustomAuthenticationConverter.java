@@ -7,8 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
-import org.springframework.security.authentication.AccountExpiredException;
-import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -33,6 +31,7 @@ public class CustomAuthenticationConverter implements Converter<Jwt, AbstractAut
         UserDetails userDetails = userDetailsService.loadUserByUsername(userId);
         if (!userDetails.isAccountNonLocked()) throw new LockedException("User locked", new BusinessException(ErrorCode.ACCOUNT_LOCKED));
         if (!userDetails.isEnabled()) throw new DisabledException("User disabled", new BusinessException(ErrorCode.ACCOUNT_DISABLED));
+        if (!userDetails.isCredentialsNonExpired()) throw new DisabledException("", new BusinessException(ErrorCode.ACCOUNT_BANNED));
 
         log.info("authorities: {}", userDetails.getAuthorities());
         return new UsernamePasswordAuthenticationToken(userDetails, jwt, userDetails.getAuthorities());

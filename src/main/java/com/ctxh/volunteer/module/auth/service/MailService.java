@@ -34,7 +34,7 @@ public class MailService {
             messageHelper.setTo(InternetAddress.parse(to));
         else
             messageHelper.setTo(to);
-        messageHelper.setFrom(from, "QUniverse");
+        messageHelper.setFrom(from, "Uni Volunteer");
         messageHelper.setSubject(emailTemplates.getSubject());
         String content = emailTemplates.formatContent(link);
         messageHelper.setText(content, true);

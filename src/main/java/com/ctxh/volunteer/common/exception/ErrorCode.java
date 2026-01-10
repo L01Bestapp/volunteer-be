@@ -33,6 +33,8 @@ public enum ErrorCode {
     INSUFFICIENT_PERMISSIONS(1110, "Insufficient permissions", HttpStatus.FORBIDDEN),
     TOKEN_GENERATION_FAILED(1111, "Failed to generate token", HttpStatus.INTERNAL_SERVER_ERROR),
     BUILD_OAUTH2_URL_FAILED(1112, "Failed to build OAuth2 URL", HttpStatus.INTERNAL_SERVER_ERROR),
+    ACCOUNT_BANNED(1113, "Account has been banned", HttpStatus.FORBIDDEN),
+
 
 
     // ============ USER ERRORS (1200-1299) ============

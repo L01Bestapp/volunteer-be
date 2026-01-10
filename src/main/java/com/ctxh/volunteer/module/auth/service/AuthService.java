@@ -25,4 +25,8 @@ public interface AuthService {
     void completeStudentProfile(CompleteProfile request);
     String uploadImage(MultipartFile file);
     GoogleSignInResponseDto verifyGoogleIdToken(String idToken);
+
+    void banUser(Long userId);
+
+    void unBanUser(Long userId);
 }

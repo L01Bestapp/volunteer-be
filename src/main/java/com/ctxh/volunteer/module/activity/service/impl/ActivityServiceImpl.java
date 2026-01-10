@@ -4,6 +4,7 @@ import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.ctxh.volunteer.common.exception.BusinessException;
 import com.ctxh.volunteer.common.exception.ErrorCode;
+import com.ctxh.volunteer.common.util.AuthUtil;
 import com.ctxh.volunteer.common.util.ImageValidator;
 import com.ctxh.volunteer.module.activity.dto.request.CreateActivityRequestDto;
 import com.ctxh.volunteer.module.activity.dto.request.UpdateActivityRequestDto;
@@ -12,10 +13,10 @@ import com.ctxh.volunteer.module.activity.dto.response.ActivityResponseDto;
 import com.ctxh.volunteer.module.activity.entity.Activity;
 import com.ctxh.volunteer.module.activity.enums.ActivityCategory;
 import com.ctxh.volunteer.module.activity.enums.ActivityStatus;
+import com.ctxh.volunteer.module.activity.enums.RegistrationState;
 import com.ctxh.volunteer.module.activity.repository.ActivityRepository;
 import com.ctxh.volunteer.module.activity.service.ActivityService;
 import com.ctxh.volunteer.module.activity.specification.ActivitySpecification;
-import com.ctxh.volunteer.module.auth.entity.User;
 import com.ctxh.volunteer.module.enrollment.EnrollmentStatus;
 import com.ctxh.volunteer.module.enrollment.dto.EnrollmentResponseDto;
 import com.ctxh.volunteer.module.enrollment.entity.Enrollment;
@@ -33,7 +34,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -50,10 +50,14 @@ public class ActivityServiceImpl implements ActivityService {
 
     @Override
     @Transactional
-    public ActivityResponseDto createActivity(Long organizationId,CreateActivityRequestDto requestDto, MultipartFile imageFile) {
+    public ActivityResponseDto createActivity(CreateActivityRequestDto requestDto, MultipartFile imageFile) {
+        Long organizationId = AuthUtil.getIdFromAuthentication();
+
         // Find organization
         Organization organization = organizationRepository.findById(organizationId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORGANIZATION_NOT_FOUND));
+
+        if(!organization.canCreateActivities()) throw new BusinessException(ErrorCode.ORGANIZATION_NOT_VERIFIED);
 
         // Validate dates
         if (requestDto.getEndDateTime().isBefore(requestDto.getStartDateTime())) {
@@ -84,8 +88,8 @@ public class ActivityServiceImpl implements ActivityService {
                 .maxParticipants(requestDto.getMaxParticipants())
                 .requirements(requestDto.getRequirements())
                 .theNumberOfCtxhDay(requestDto.getTheNumberOfCtxhDay())
-                .status(ActivityStatus.OPEN)
-
+                .registrationState(RegistrationState.OPEN)
+                .activityStatus(ActivityStatus.UPCOMING)
                 .build();
 
         // Set organization
@@ -141,7 +145,7 @@ public class ActivityServiceImpl implements ActivityService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.ACTIVITY_NOT_FOUND));
 
         // Check if activity can be modified
-        if (activity.getStatus() == ActivityStatus.COMPLETED) {
+        if (activity.getRegistrationState() == RegistrationState.COMPLETED) {
             throw new BusinessException(ErrorCode.ACTIVITY_ALREADY_COMPLETED);
         }
 
@@ -199,7 +203,7 @@ public class ActivityServiceImpl implements ActivityService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.ACTIVITY_NOT_FOUND));
 
         // Check if activity can be deleted
-        if (activity.getStatus() == ActivityStatus.COMPLETED) {
+        if (activity.getRegistrationState() == RegistrationState.COMPLETED) {
             throw new BusinessException(ErrorCode.ACTIVITY_ALREADY_COMPLETED);
         }
 
@@ -219,7 +223,7 @@ public class ActivityServiceImpl implements ActivityService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.ACTIVITY_NOT_FOUND));
 
         // Check if activity is open
-        if (activity.getStatus() != ActivityStatus.OPEN && activity.getStatus() != ActivityStatus.FULL) {
+        if (activity.getRegistrationState() != RegistrationState.OPEN && activity.getRegistrationState() != RegistrationState.FULL) {
             throw new BusinessException(ErrorCode.ACTIVITY_NOT_OPEN);
         }
 
@@ -344,8 +348,8 @@ public class ActivityServiceImpl implements ActivityService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ActivityListResponseDto> getAvailableActivities() {
-        List<Activity> activities = activityRepository.findAvailableActivities(LocalDateTime.now());
+    public List<ActivityListResponseDto> getAllActivity() {
+        List<Activity> activities = activityRepository.findAllActivityOrderByDESC();
         return activities.stream()
                 .map(this::mapToActivityListResponseDto)
                 .toList();
@@ -355,7 +359,7 @@ public class ActivityServiceImpl implements ActivityService {
     @Transactional(readOnly = true)
     public List<ActivityListResponseDto> searchActivities(String keyword) {
         if (keyword == null || keyword.trim().isEmpty()) {
-            return getAvailableActivities();
+            return getAllActivity();
         }
 
         List<Activity> activities = activityRepository.searchByKeyword(keyword.trim());
@@ -376,7 +380,7 @@ public class ActivityServiceImpl implements ActivityService {
     public List<ActivityListResponseDto> searchActivitiesAdvanced(
             String keyword,
             ActivityCategory category,
-            ActivityStatus status,
+            RegistrationState status,
             LocalDate startDate,
             LocalDate endDate
     ) {
@@ -417,7 +421,8 @@ public class ActivityServiceImpl implements ActivityService {
                 .pendingParticipants(activity.getPendingParticipants())
                 .approvedParticipants(activity.getApprovedParticipants())
                 .remainingSlots(activity.getRemainingSlots())
-                .status(activity.getStatus())
+                .registrationState(activity.getRegistrationState())
+                .activityStatus(activity.getActivityStatus())
                 .requirements(activity.getRequirements())
                 .benefitsCtxh(activity.getTheNumberOfCtxhDay())
                 .createdAt(activity.getCreateAt())
@@ -432,6 +437,7 @@ public class ActivityServiceImpl implements ActivityService {
                 .shortDescription(activity.getShortDescription())
                 .imageUrl(activity.getImageUrl())
                 .category(activity.getCategory())
+                .registrationDeadline(activity.getRegistrationDeadline())
                 .theNumberOfCtxhDay(activity.getTheNumberOfCtxhDay())
                 .startDateTime(activity.getStartDateTime())
                 .endDateTime(activity.getEndDateTime())
@@ -439,7 +445,8 @@ public class ActivityServiceImpl implements ActivityService {
                 .maxParticipants(activity.getMaxParticipants())
                 .approvedParticipants(activity.getApprovedParticipants())
                 .remainingSlots(activity.getRemainingSlots())
-                .status(activity.getStatus())
+                .registrationState(activity.getRegistrationState())
+                .activityStatus(activity.getActivityStatus())
                 .createdAt(activity.getCreateAt())
                 .build();
     }

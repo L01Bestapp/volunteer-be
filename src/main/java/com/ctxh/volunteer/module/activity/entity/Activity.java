@@ -5,12 +5,12 @@ import com.ctxh.volunteer.common.exception.BusinessException;
 import com.ctxh.volunteer.common.exception.ErrorCode;
 import com.ctxh.volunteer.module.activity.enums.ActivityCategory;
 import com.ctxh.volunteer.module.activity.enums.ActivityStatus;
+import com.ctxh.volunteer.module.activity.enums.RegistrationState;
 import com.ctxh.volunteer.module.attendance.entity.Attendance;
 import com.ctxh.volunteer.module.enrollment.entity.Enrollment;
 import com.ctxh.volunteer.module.organization.entity.Organization;
 import com.ctxh.volunteer.module.task.entity.Task;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.hypersistence.utils.hibernate.id.Tsid;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -106,9 +106,14 @@ public class Activity extends BaseEntity {
 
     // ============ STATUS ============
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, length = 20)
+    @Column(name = "registration_state", nullable = false, length = 20)
     @Builder.Default
-    private ActivityStatus status = ActivityStatus.OPEN;
+    private RegistrationState registrationState = RegistrationState.OPEN;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "activity_status", nullable = false, length = 20)
+    @Builder.Default
+    private ActivityStatus activityStatus = ActivityStatus.UPCOMING;
 
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
@@ -144,7 +149,7 @@ public class Activity extends BaseEntity {
      */
     public boolean canRegister() {
         // Nếu activity không mở đăng ký thì thôi
-        if (status != ActivityStatus.OPEN) {
+        if (registrationState != RegistrationState.OPEN) {
             throw new BusinessException(ErrorCode.ACTIVITY_NOT_OPEN_FOR_ENROLLMENT);
         }
 
@@ -194,7 +199,7 @@ public class Activity extends BaseEntity {
         this.currentParticipants++;
 
         if (maxParticipants != null && approvedParticipants >= maxParticipants) {
-            this.status = ActivityStatus.FULL;
+            this.registrationState = RegistrationState.FULL;
         }
     }
 
@@ -239,21 +244,21 @@ public class Activity extends BaseEntity {
      * Open registration
      */
     public void openRegistration() {
-        this.status = ActivityStatus.OPEN;
+        this.registrationState = RegistrationState.OPEN;
     }
 
     /**
      * Close registration
      */
     public void closeRegistration() {
-        this.status = ActivityStatus.CLOSED;
+        this.registrationState = RegistrationState.CLOSED;
     }
 
     /**
      * Complete activity
      */
     public void complete() {
-        this.status = ActivityStatus.COMPLETED;
+        this.registrationState = RegistrationState.COMPLETED;
         this.completedAt = LocalDateTime.now();
     }
 

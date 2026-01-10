@@ -7,6 +7,7 @@ import com.ctxh.volunteer.module.attendance.repository.AttendanceRepository;
 import com.ctxh.volunteer.module.auth.RoleEnum;
 import com.ctxh.volunteer.module.auth.entity.Role;
 import com.ctxh.volunteer.module.auth.repository.RoleRepository;
+import com.ctxh.volunteer.module.auth.service.AuthService;
 import com.ctxh.volunteer.module.certificate.dto.CertificateResponseDto;
 import com.ctxh.volunteer.module.certificate.entity.Certificate;
 import com.ctxh.volunteer.module.certificate.repository.CertificateRepository;
@@ -47,6 +48,7 @@ public class StudentServiceImpl implements StudentService {
     private final AttendanceRepository attendanceRepository;
     private final CertificateRepository certificateRepository;
     private final RoleRepository roleRepository;
+    private final AuthService authService;
 
     @Override
     public StudentResponseDto registerStudent(CreateStudentRequestDto requestDto) {
@@ -84,6 +86,8 @@ public class StudentServiceImpl implements StudentService {
         student.generateQrCode();
         Student savedStudent = studentRepository.save(student);
         log.info("Created student with ID: {}", savedStudent.getStudentId());
+
+        authService.resendVerificationEmail(requestDto.getEmail());
 
         return mapToStudentResponseDto(savedStudent);
     }

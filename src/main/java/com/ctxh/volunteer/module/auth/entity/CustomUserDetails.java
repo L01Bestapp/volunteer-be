@@ -8,7 +8,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.List;
 
 @Getter
 @AllArgsConstructor
@@ -19,15 +18,14 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(() -> user.getRoles().stream()
+        return user.getRoles().stream()
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getRoleName()))
-                .toList().toString()
-        );
+                .toList();
     }
 
     @Override
     public String getUsername() {
-        return user.getEmail();
+        return user.getUserId().toString();
     }
 
     @Override
@@ -55,4 +53,10 @@ public class CustomUserDetails implements UserDetails {
     public boolean isEnabled() {
         return user.getIsVerified();
     }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return !user.getIsBanned();
+    }
+
 }

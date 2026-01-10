@@ -56,4 +56,4 @@ jwt:
   refreshExpTime: ${EXP_REFRESH_TOKEN:2592000} # 30 days in seconds
 
 base:
-  url: ${BASE_URL_WEBSITE:http://localhost:8080}
+  url: ${BASE_URL_WEBSITE:https://marg-astonishing-matthias.ngrok-free.dev}

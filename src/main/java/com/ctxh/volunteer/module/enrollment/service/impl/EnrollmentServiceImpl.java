@@ -170,7 +170,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
                 .activityTitle(activity.getTitle())
                 .shortDescription(activity.getShortDescription())
                 .category(activity.getCategory())
-                .activityStatus(activity.getStatus())
+                .registrationState(activity.getRegistrationState())
                 .startDateTime(activity.getStartDateTime())
                 .endDateTime(activity.getEndDateTime())
                 .address(activity.getAddress())

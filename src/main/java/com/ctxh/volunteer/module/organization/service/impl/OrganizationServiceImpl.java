@@ -5,6 +5,7 @@ import com.ctxh.volunteer.common.exception.ErrorCode;
 import com.ctxh.volunteer.module.auth.RoleEnum;
 import com.ctxh.volunteer.module.auth.entity.Role;
 import com.ctxh.volunteer.module.auth.repository.RoleRepository;
+import com.ctxh.volunteer.module.auth.service.AuthService;
 import com.ctxh.volunteer.module.organization.dto.request.CreateOrganizationRequestDto;
 import com.ctxh.volunteer.module.organization.dto.request.UpdateOrganizationRequestDto;
 import com.ctxh.volunteer.module.organization.dto.response.OrganizationResponseDto;
@@ -31,9 +32,13 @@ public class OrganizationServiceImpl implements OrganizationService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final AuthService authService;
 
     @Override
     public OrganizationResponseDto registerOrganization(CreateOrganizationRequestDto requestDto) {
+        if (userRepository.existsByEmail(requestDto.getEmail())) {
+            throw new BusinessException(ErrorCode.EMAIL_ALREADY_REGISTERED);
+        }
         // Validate organization uniqueness
         if (organizationRepository.existsByOrganizationName(requestDto.getOrganizationName())) {
             throw new BusinessException(ErrorCode.ORGANIZATION_NAME_ALREADY_EXISTS);
@@ -62,6 +67,8 @@ public class OrganizationServiceImpl implements OrganizationService {
         userRepository.save(user);
         Organization savedOrganization = user.getOrganization();
         log.info("Created organization with ID: {}", savedOrganization.getOrganizationId());
+
+        authService.resendVerificationEmail(requestDto.getEmail());
 
         return mapToOrganizationResponseDto(savedOrganization);
     }

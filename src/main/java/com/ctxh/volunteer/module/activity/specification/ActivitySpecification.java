@@ -2,7 +2,7 @@ package com.ctxh.volunteer.module.activity.specification;
 
 import com.ctxh.volunteer.module.activity.entity.Activity;
 import com.ctxh.volunteer.module.activity.enums.ActivityCategory;
-import com.ctxh.volunteer.module.activity.enums.ActivityStatus;
+import com.ctxh.volunteer.module.activity.enums.RegistrationState;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -20,7 +20,7 @@ public class ActivitySpecification {
     public static Specification<Activity> searchActivities(
             String keyword,
             ActivityCategory category,
-            ActivityStatus status,
+            RegistrationState status,
             LocalDate startDate,
             LocalDate endDate
     ) {
@@ -55,7 +55,7 @@ public class ActivitySpecification {
                 predicates.add(criteriaBuilder.equal(root.get("status"), status));
             } else {
                 // Default: only show OPEN activities
-                predicates.add(criteriaBuilder.equal(root.get("status"), ActivityStatus.OPEN));
+                predicates.add(criteriaBuilder.equal(root.get("status"), RegistrationState.OPEN));
             }
 
             // Start date range filter
