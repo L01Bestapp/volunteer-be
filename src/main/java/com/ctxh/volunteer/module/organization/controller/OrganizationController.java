@@ -1,11 +1,11 @@
 package com.ctxh.volunteer.module.organization.controller;
 
 import com.ctxh.volunteer.common.dto.ApiResponse;
+import com.ctxh.volunteer.common.util.AuthUtil;
 import com.ctxh.volunteer.module.organization.dto.request.CreateOrganizationRequestDto;
 import com.ctxh.volunteer.module.organization.dto.request.UpdateOrganizationRequestDto;
 import com.ctxh.volunteer.module.organization.dto.response.OrganizationResponseDto;
 import com.ctxh.volunteer.module.organization.service.OrganizationService;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -45,12 +45,14 @@ public class OrganizationController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<List<OrganizationResponseDto>> getAllOrganizations() {
         return ApiResponse.ok(organizationService.getAllOrganization());
     }
 
     @PutMapping("/{id}/active")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Void> activeOrganization(@PathVariable("id") Long organizationId) {
         organizationService.activeOrganization(organizationId);
         return ApiResponse.ok("active account successfully");
@@ -61,12 +63,13 @@ public class OrganizationController {
      * Update organization information
      * PUT /api/v1/organizations/{id}
      */
-    @PutMapping("/{id}")
+    @PutMapping("/profile")
+    @PreAuthorize("hasRole('ORGANIZATION')")
     public ApiResponse<OrganizationResponseDto> updateOrganization(
-            @PathVariable("id") Long organizationId,
             @Valid @RequestBody UpdateOrganizationRequestDto requestDto) {
+        Long organizationId = AuthUtil.getIdFromAuthentication();
         return ApiResponse.ok(
-                "Student updated successfully",
+                "updated Organization successfully",
                 organizationService.updateOrganization(organizationId, requestDto)
         );
     }
@@ -75,10 +78,12 @@ public class OrganizationController {
     * Get organization by ID
     * GET /api/v1/organization/{id}
     */
-    @GetMapping("/{id}")
-    public ApiResponse<OrganizationResponseDto> getOrganizationById(@PathVariable("id") Long organizationId) {
+    @GetMapping("/profile")
+    @PreAuthorize("hasRole('ORGANIZATION')")
+    public ApiResponse<OrganizationResponseDto> getOrganizationById() {
+        Long organizationId = AuthUtil.getIdFromAuthentication();
         return ApiResponse.ok(
-                "Organization retrieved successfully",
+                "retrieved Organization successfully",
                 organizationService.getOrganizationById(organizationId)
         );
     }

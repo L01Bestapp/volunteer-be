@@ -15,7 +15,6 @@ import lombok.Setter;
 @Builder
 public class VerifyOtpRequest {
     @NotBlank(message = "Email is required")
-    @Pattern(regexp = "^[A-Za-z0-9+_.-]+@hcmut\\.edu\\.vn$", message = "email must be a valid HCMUT email address")
     private String email;
 
     @NotBlank(message = "OTP code is required")

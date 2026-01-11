@@ -364,7 +364,7 @@ class AuthServiceImplTest {
         // Act & Assert
         assertThatThrownBy(() -> authService.forgotPassword(testUser.getEmail()))
                 .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.ACCOUNT_DISABLED);
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.EMAIL_NOT_VERIFIED);
 
         verify(userRepository).findByEmail(testUser.getEmail());
         verifyNoInteractions(mailService);

@@ -24,9 +24,8 @@ public enum ErrorCode {
     TOKEN_EXPIRED(1101, "Token has expired", HttpStatus.UNAUTHORIZED),
     TOKEN_INVALID(1102, "Invalid token", HttpStatus.UNAUTHORIZED),
     REFRESH_TOKEN_INVALID(1103, "Invalid refresh token", HttpStatus.UNAUTHORIZED),
-    ACCOUNT_DISABLED(1104, "Account has been disabled", HttpStatus.FORBIDDEN),
+    EMAIL_NOT_VERIFIED(1104, "Email address is not verified, please check email", HttpStatus.FORBIDDEN),
     ACCOUNT_LOCKED(1105, "Account has been locked", HttpStatus.FORBIDDEN),
-    EMAIL_NOT_VERIFIED(1106, "Email address is not verified", HttpStatus.FORBIDDEN),
     INVALID_VERIFICATION_TOKEN(1107, "Invalid verification token", HttpStatus.BAD_REQUEST),
     PASSWORD_RESET_TOKEN_EXPIRED(1108, "Password reset token has expired", HttpStatus.BAD_REQUEST),
     INVALID_PASSWORD_RESET_TOKEN(1109, "Invalid password reset token", HttpStatus.BAD_REQUEST),
@@ -47,6 +46,7 @@ public enum ErrorCode {
     EMAIL_OR_PASSWORD_INCORRECT(1206, "Email or password is incorrect", HttpStatus.BAD_REQUEST),
     NOT_EQUAL_PASSWORD(1207, "Password and confirm password do not match", HttpStatus.BAD_REQUEST),
     ERROR_RESET_PASSWORD(1208, "Error occurred while resetting password", HttpStatus.INTERNAL_SERVER_ERROR),
+    INCORRECT_CURRENTLY_PASSWORD(1209, "Currently password is incorrect", HttpStatus.BAD_REQUEST),
 
     // ============ STUDENT ERRORS (1300-1399) ============
     STUDENT_NOT_FOUND(1300, "Student not found", HttpStatus.NOT_FOUND),

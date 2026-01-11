@@ -15,11 +15,13 @@ import com.ctxh.volunteer.module.certificate.service.CertificateService;
 import com.ctxh.volunteer.module.enrollment.EnrollmentStatus;
 import com.ctxh.volunteer.module.enrollment.entity.Enrollment;
 import com.ctxh.volunteer.module.enrollment.repository.EnrollmentRepository;
+import com.ctxh.volunteer.module.notification.event.AttendanceCompletedEvent;
 import com.ctxh.volunteer.module.student.entity.Student;
 import com.ctxh.volunteer.module.student.repository.StudentRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +41,7 @@ public class AttendanceServiceImpl implements AttendanceService {
     private final ActivityRepository activityRepository;
     private final EnrollmentRepository enrollmentRepository;
     private final CertificateService certificateService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -142,6 +145,9 @@ public class AttendanceServiceImpl implements AttendanceService {
             enrollment.complete();
             enrollmentRepository.save(enrollment);
 
+            // Publish event for notification
+            eventPublisher.publishEvent(new AttendanceCompletedEvent(this, attendance));
+
             // AUTO-GENERATE CERTIFICATE after successful checkout
             try {
                 if (!certificateService.certificateExists(enrollment.getEnrollmentId())) {
@@ -211,6 +217,8 @@ public class AttendanceServiceImpl implements AttendanceService {
         return AttendanceSummaryDto.builder()
                 .activityId(activity.getActivityId())
                 .activityTitle(activity.getTitle())
+                .activityStartDate(activity.getStartDateTime())
+                .activityEndDate(activity.getEndDateTime())
                 .totalEnrolled(totalEnrolled)
                 .totalPresent(totalPresent)
                 .totalAbsent(totalAbsent)

@@ -101,6 +101,9 @@ public class User extends BaseEntity {
     @Column(name = "last_password_change_at")
     private LocalDateTime lastPasswordChangeAt;
 
+    @Column(name = "fcm_token", length = 500)
+    private String fcmToken;
+
     // Associations to Student and Organization entities
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Student student;

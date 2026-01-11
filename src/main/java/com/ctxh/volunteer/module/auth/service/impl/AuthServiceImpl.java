@@ -10,6 +10,7 @@ import com.ctxh.volunteer.common.util.AuthUtil;
 import com.ctxh.volunteer.common.util.ImageValidator;
 import com.ctxh.volunteer.module.auth.RoleEnum;
 import com.ctxh.volunteer.module.auth.config.RSAKeyRecord;
+import com.ctxh.volunteer.module.auth.dto.request.ChangePasswordRequestDto;
 import com.ctxh.volunteer.module.auth.dto.request.CompleteProfile;
 import com.ctxh.volunteer.module.auth.dto.request.LoginRequest;
 import com.ctxh.volunteer.module.auth.dto.request.ResetPasswordRequest;
@@ -50,6 +51,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.client.WebClient;
+import java.security.SecureRandom;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -57,6 +59,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -72,6 +75,8 @@ public class AuthServiceImpl implements AuthService {
     private final StudentRepository studentRepository;
     private final ImageValidator imageValidator;
     private final Cloudinary cloudinary;
+
+    private static final SecureRandom secureRandom = new SecureRandom();
 
 
     @Value("${jwt.expirationTime}")
@@ -155,10 +160,11 @@ public class AuthServiceImpl implements AuthService {
                         throw new BusinessException(ErrorCode.ACCOUNT_LOCKED);
                     }
                     if (Boolean.FALSE.equals(user.getIsVerified())) {
-                        throw new BusinessException(ErrorCode.ACCOUNT_DISABLED);
+                        throw new BusinessException(ErrorCode.EMAIL_NOT_VERIFIED);
                     }
-                    // Generate random 6-digit OTP code
-                    String otpCode = String.format("%06d", (int)(Math.random() * 1000000));
+                    // 2. Tạo OTP an toàn bằng SecureRandom
+                    int randomInt = secureRandom.nextInt(999999); // 0 -> 999998
+                    String otpCode = String.format("%06d", randomInt);
 
                     // Save OTP to database using User entity method
                     user.generatePasswordResetToken(otpCode);
@@ -189,7 +195,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         if (Boolean.FALSE.equals(user.getIsVerified())) {
-            throw new BusinessException(ErrorCode.ACCOUNT_DISABLED);
+            throw new BusinessException(ErrorCode.EMAIL_NOT_VERIFIED);
         }
 
         // Verify OTP code and expiration
@@ -234,7 +240,7 @@ public class AuthServiceImpl implements AuthService {
         User user = getUserFromClaims(claimsSet);
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         if (Boolean.FALSE.equals(user.getIsVerified())) {
-            throw new BusinessException(ErrorCode.ACCOUNT_DISABLED);
+            throw new BusinessException(ErrorCode.EMAIL_NOT_VERIFIED);
         }
         if (Boolean.TRUE.equals(user.getIsLocked())) {
             user.setIsLocked(false);
@@ -427,6 +433,24 @@ public class AuthServiceImpl implements AuthService {
                 () -> new BusinessException(ErrorCode.USER_NOT_FOUND)
         );
         user.unBanUser();
+        userRepository.save(user);
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(ChangePasswordRequestDto requestDto) {
+        Long userId = AuthUtil.getIdFromAuthentication();
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new BusinessException(ErrorCode.USER_NOT_FOUND)
+        );
+
+        if (!passwordEncoder.matches(requestDto.currentPassword(), user.getPassword()))
+            throw new BusinessException(ErrorCode.INCORRECT_CURRENTLY_PASSWORD);
+
+        if (!Objects.equals(requestDto.newPassword(), requestDto.confirmNewPassword()))
+            throw new BusinessException(ErrorCode.NOT_EQUAL_PASSWORD);
+
+        user.setPassword(passwordEncoder.encode(requestDto.newPassword()));
         userRepository.save(user);
     }
 

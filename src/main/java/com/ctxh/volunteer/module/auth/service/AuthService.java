@@ -1,6 +1,7 @@
 package com.ctxh.volunteer.module.auth.service;
 
 
+import com.ctxh.volunteer.module.auth.dto.request.ChangePasswordRequestDto;
 import com.ctxh.volunteer.module.auth.dto.request.CompleteProfile;
 import com.ctxh.volunteer.module.auth.dto.request.LoginRequest;
 import com.ctxh.volunteer.module.auth.dto.request.ResetPasswordRequest;
@@ -29,4 +30,6 @@ public interface AuthService {
     void banUser(Long userId);
 
     void unBanUser(Long userId);
+
+    void changePassword(ChangePasswordRequestDto requestDto);
 }

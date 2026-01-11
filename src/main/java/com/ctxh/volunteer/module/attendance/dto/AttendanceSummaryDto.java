@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -13,6 +15,8 @@ public class AttendanceSummaryDto {
 
     private Long activityId;
     private String activityTitle;
+    private LocalDateTime activityStartDate;
+    private LocalDateTime activityEndDate;
 
     // Enrollment stats
     private Long totalEnrolled;      // Total approved students

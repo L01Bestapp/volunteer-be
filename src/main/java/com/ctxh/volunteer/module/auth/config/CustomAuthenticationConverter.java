@@ -30,7 +30,7 @@ public class CustomAuthenticationConverter implements Converter<Jwt, AbstractAut
         String userId = jwt.getSubject();
         UserDetails userDetails = userDetailsService.loadUserByUsername(userId);
         if (!userDetails.isAccountNonLocked()) throw new LockedException("User locked", new BusinessException(ErrorCode.ACCOUNT_LOCKED));
-        if (!userDetails.isEnabled()) throw new DisabledException("User disabled", new BusinessException(ErrorCode.ACCOUNT_DISABLED));
+        if (!userDetails.isEnabled()) throw new DisabledException("User disabled", new BusinessException(ErrorCode.EMAIL_NOT_VERIFIED));
         if (!userDetails.isCredentialsNonExpired()) throw new DisabledException("", new BusinessException(ErrorCode.ACCOUNT_BANNED));
 
         log.info("authorities: {}", userDetails.getAuthorities());

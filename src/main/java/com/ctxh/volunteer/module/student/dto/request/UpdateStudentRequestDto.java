@@ -26,16 +26,12 @@ public class UpdateStudentRequestDto {
     @Size(max = 100, message = "Full name must not exceed 100 characters")
     private String fullName;
 
-    @EnumValidation(name = "Gender", enumClass = Gender.class)
-    private String gender;
+    private String bio;
 
-    @Size(max = 20, message = "Academic year must not exceed 20 characters")
     private String academicYear;
-
-    @Size(max = 100, message = "Faculty must not exceed 100 characters")
-    private String faculty;
 
     private LocalDate dateOfBirth;
 
-    private String bio;
+    @EnumValidation(name = "Gender", enumClass = Gender.class)
+    private String gender;
 }

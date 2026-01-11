@@ -7,23 +7,23 @@ import com.ctxh.volunteer.module.attendance.entity.Attendance;
 import com.ctxh.volunteer.module.attendance.repository.AttendanceRepository;
 import com.ctxh.volunteer.module.auth.RoleEnum;
 import com.ctxh.volunteer.module.auth.entity.Role;
+import com.ctxh.volunteer.module.auth.entity.User;
 import com.ctxh.volunteer.module.auth.repository.RoleRepository;
+import com.ctxh.volunteer.module.auth.repository.UserRepository;
 import com.ctxh.volunteer.module.auth.service.AuthService;
 import com.ctxh.volunteer.module.certificate.dto.CertificateResponseDto;
 import com.ctxh.volunteer.module.certificate.entity.Certificate;
 import com.ctxh.volunteer.module.certificate.repository.CertificateRepository;
 import com.ctxh.volunteer.module.enrollment.entity.Enrollment;
 import com.ctxh.volunteer.module.enrollment.repository.EnrollmentRepository;
-import com.ctxh.volunteer.module.student.dto.response.ParticipationHistoryDto;
 import com.ctxh.volunteer.module.student.dto.request.CreateStudentRequestDto;
 import com.ctxh.volunteer.module.student.dto.request.UpdateStudentRequestDto;
+import com.ctxh.volunteer.module.student.dto.response.ParticipationHistoryDto;
 import com.ctxh.volunteer.module.student.dto.response.StudentResponseDto;
 import com.ctxh.volunteer.module.student.entity.Student;
 import com.ctxh.volunteer.module.student.enums.Gender;
 import com.ctxh.volunteer.module.student.repository.StudentRepository;
 import com.ctxh.volunteer.module.student.service.StudentService;
-import com.ctxh.volunteer.module.auth.entity.User;
-import com.ctxh.volunteer.module.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -112,21 +112,20 @@ public class StudentServiceImpl implements StudentService {
             student.setPhoneNumber(requestDto.getPhoneNumber());
         }
 
-        if (requestDto.getAcademicYear() != null) {
-            student.setAcademicYear(requestDto.getAcademicYear());
+        if (requestDto.getBio() != null) {
+            user.setBio(requestDto.getBio());
         }
-        if (requestDto.getFaculty() != null) {
-            student.setFaculty(requestDto.getFaculty());
-        }
-        if (requestDto.getDateOfBirth() != null) {
-            student.setDateOfBirth(requestDto.getDateOfBirth());
-        }
+
         if (requestDto.getGender() != null) {
             student.setGender(Gender.valueOf(requestDto.getGender()));
         }
 
-        if (requestDto.getBio() != null) {
-            user.setBio(requestDto.getBio());
+        if (requestDto.getDateOfBirth() != null) {
+            student.setDateOfBirth(requestDto.getDateOfBirth());
+        }
+
+        if (requestDto.getAcademicYear() != null) {
+            student.setAcademicYear(requestDto.getAcademicYear());
         }
 
         userRepository.save(user);
@@ -237,6 +236,16 @@ public class StudentServiceImpl implements StudentService {
 
         student.generateQrCode();
         studentRepository.save(student);
+        return mapToStudentResponseDto(student);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public StudentResponseDto getStudent(Long studentId) {
+        Student student = studentRepository.findById(studentId).orElseThrow(
+                () -> new BusinessException(ErrorCode.STUDENT_NOT_FOUND)
+        );
+
         return mapToStudentResponseDto(student);
     }
 

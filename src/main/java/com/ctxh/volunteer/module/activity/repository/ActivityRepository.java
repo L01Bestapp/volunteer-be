@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,4 +49,15 @@ public interface ActivityRepository extends JpaRepository<Activity, Long>, JpaSp
     List<Activity> searchByKeyword(@Param("keyword") String keyword);
 
     boolean existsByActivityIdAndOrganization_OrganizationId(Long activityId, Long organizationOrganizationId);
+
+    /**
+     * Find activities starting within a specific time window (for reminder notifications)
+     */
+    @Query("SELECT a FROM Activity a WHERE " +
+            "a.startDateTime >= :startTime AND a.startDateTime <= :endTime " +
+            "AND a.activityStatus = 'UPCOMING'")
+    List<Activity> findActivitiesStartingBetween(
+            @Param("startTime") LocalDateTime startTime,
+            @Param("endTime") LocalDateTime endTime
+    );
 }

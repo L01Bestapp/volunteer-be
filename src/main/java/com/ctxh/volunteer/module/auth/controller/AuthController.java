@@ -1,6 +1,7 @@
 package com.ctxh.volunteer.module.auth.controller;
 
 import com.ctxh.volunteer.common.dto.ApiResponse;
+import com.ctxh.volunteer.module.auth.dto.request.ChangePasswordRequestDto;
 import com.ctxh.volunteer.module.auth.dto.request.CompleteProfile;
 import com.ctxh.volunteer.module.auth.dto.request.GoogleIdTokenRequest;
 import com.ctxh.volunteer.module.auth.dto.request.LoginRequest;
@@ -20,7 +21,6 @@ import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -120,7 +120,7 @@ public class AuthController {
     @PostMapping("/forgot-password")
     public ApiResponse<Void> forgotPassword(@RequestParam("email") String email) {
         authService.forgotPassword(email);
-        return ApiResponse.ok("If the email exists, you will receive a email recovery guide.", null);
+        return ApiResponse.ok("If the email exists, you will receive a email recovery guide.");
     }
 
     @Operation(summary = "Verify OTP", description = "Verify OTP code and get reset password token")
@@ -139,10 +139,16 @@ public class AuthController {
     }
 
     @Operation(summary = "Upload avatar", description = "Upload profile image for authenticated user")
-    @SecurityRequirement(name = "bearerAuth")
-    @PostAuthorize("returnObject.data == authentication.name")
     @PutMapping(value = "/me/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<String> uploadImage(@RequestPart("avatar") MultipartFile avatar) {
         return ApiResponse.ok("Image uploaded successfully", authService.uploadImage(avatar));
     }
+
+    @Operation(summary = "change password", description = "change password")
+    @PutMapping("/change-password")
+    public ApiResponse<Void> changePassword(@Valid @RequestBody ChangePasswordRequestDto requestDto) {
+        authService.changePassword(requestDto);
+        return ApiResponse.ok("change password successfully");
+    }
+
 }

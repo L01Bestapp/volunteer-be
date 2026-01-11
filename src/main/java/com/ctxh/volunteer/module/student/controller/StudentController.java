@@ -3,9 +3,9 @@ package com.ctxh.volunteer.module.student.controller;
 import com.ctxh.volunteer.common.dto.ApiResponse;
 import com.ctxh.volunteer.common.util.AuthUtil;
 import com.ctxh.volunteer.module.certificate.dto.CertificateResponseDto;
-import com.ctxh.volunteer.module.student.dto.response.ParticipationHistoryDto;
 import com.ctxh.volunteer.module.student.dto.request.CreateStudentRequestDto;
 import com.ctxh.volunteer.module.student.dto.request.UpdateStudentRequestDto;
+import com.ctxh.volunteer.module.student.dto.response.ParticipationHistoryDto;
 import com.ctxh.volunteer.module.student.dto.response.StudentResponseDto;
 import com.ctxh.volunteer.module.student.service.StudentService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -65,10 +64,11 @@ public class StudentController {
      * Update student information
      * PUT /api/v1/students/{id}
      */
-    @PutMapping("/{id}")
+    @PutMapping("/update-profile")
+    @PreAuthorize("hasRole('STUDENT')")
     public ApiResponse<StudentResponseDto> updateStudent(
-            @PathVariable("id") Long studentId,
             @Valid @RequestBody UpdateStudentRequestDto requestDto) {
+        Long studentId = AuthUtil.getIdFromAuthentication();
         return ApiResponse.ok(
                 "Student updated successfully",
                 studentService.updateStudent(studentId, requestDto)
@@ -96,6 +96,16 @@ public class StudentController {
         return ApiResponse.ok(
                 "Student retrieved successfully",
                 studentService.getStudentByMssv(mssv)
+        );
+    }
+
+    @GetMapping("/my-profile")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ApiResponse<StudentResponseDto> getStudent() {
+        Long studentId = AuthUtil.getIdFromAuthentication();
+        return ApiResponse.ok(
+                "Student retrieved successfully",
+                studentService.getStudent(studentId)
         );
     }
 

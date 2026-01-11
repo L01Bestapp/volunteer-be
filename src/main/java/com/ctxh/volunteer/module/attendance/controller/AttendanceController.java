@@ -82,6 +82,7 @@ public class AttendanceController {
      */
     @Operation(summary = "get attendance summary for an activity")
     @GetMapping("/activities/{activityId}/attendance/summary")
+    @PostAuthorize("@activitySecurity.isOwner(#activityId)")
     public ApiResponse<AttendanceSummaryDto> getAttendanceSummary(
             @PathVariable("activityId") Long activityId) {
         return ApiResponse.ok(
