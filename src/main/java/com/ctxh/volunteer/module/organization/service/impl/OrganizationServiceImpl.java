@@ -95,6 +95,10 @@ public class OrganizationServiceImpl implements OrganizationService {
             user.setBio(requestDto.getBio());
         }
 
+        if (requestDto.getOrganizationType() != null) {
+            organization.setType(OrganizationType.valueOf(requestDto.getOrganizationType()));
+        }
+
         if (requestDto.getRepresentativeEmail() != null) {
             organization.setRepresentativeEmail(requestDto.getRepresentativeEmail());
         }

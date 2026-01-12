@@ -21,10 +21,13 @@ import com.ctxh.volunteer.module.enrollment.EnrollmentStatus;
 import com.ctxh.volunteer.module.enrollment.dto.EnrollmentResponseDto;
 import com.ctxh.volunteer.module.enrollment.entity.Enrollment;
 import com.ctxh.volunteer.module.enrollment.repository.EnrollmentRepository;
+import com.ctxh.volunteer.module.notification.event.EnrollmentApprovedEvent;
+import com.ctxh.volunteer.module.notification.event.EnrollmentRejectedEvent;
 import com.ctxh.volunteer.module.organization.entity.Organization;
 import com.ctxh.volunteer.module.organization.repository.OrganizationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,6 +49,7 @@ public class ActivityServiceImpl implements ActivityService {
     private final EnrollmentRepository enrollmentRepository;
     private final ImageValidator imageValidator;
     private final Cloudinary cloudinary;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -324,6 +328,9 @@ public class ActivityServiceImpl implements ActivityService {
         log.info("Approved enrollment ID: {} for activity ID: {} by user ID: {}",
                 enrollmentId, activityId, approvedByUserId);
 
+        // Publish event for notification
+        eventPublisher.publishEvent(new EnrollmentApprovedEvent(this, approvedEnrollment));
+
         return mapToEnrollmentResponseDto(approvedEnrollment);
     }
 
@@ -344,6 +351,9 @@ public class ActivityServiceImpl implements ActivityService {
         Enrollment rejectedEnrollment = enrollmentRepository.save(enrollment);
         log.info("Rejected enrollment ID: {} for activity ID: {} by user ID: {}",
                 enrollmentId, activityId, rejectedByUserId);
+
+        // Publish event for notification
+        eventPublisher.publishEvent(new EnrollmentRejectedEvent(this, rejectedEnrollment));
 
         return mapToEnrollmentResponseDto(rejectedEnrollment);
     }

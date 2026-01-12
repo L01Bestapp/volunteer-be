@@ -180,6 +180,7 @@ public class StudentServiceImpl implements StudentService {
                             .approvedAt(enrollment.getApprovedAt())
                             .isCompleted(enrollment.getIsCompleted())
                             .completedAt(enrollment.getCompletedAt())
+                            .imageUrl(enrollment.getActivity().getImageUrl())
                             // Activity info
                             .activityId(enrollment.getActivity().getActivityId())
                             .activityTitle(enrollment.getActivity().getTitle())
@@ -203,6 +204,60 @@ public class StudentServiceImpl implements StudentService {
                             .build();
                 })
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ParticipationHistoryDto getOneParticipationHistory(Long studentId, Long activityId) {
+        // Verify student exists
+        if (!studentRepository.existsById(studentId)) {
+            throw new BusinessException(ErrorCode.STUDENT_NOT_FOUND);
+        }
+
+        // Get all enrollments for the student
+        Enrollment enrollment = enrollmentRepository.findByStudentIdAndActivityId(studentId, activityId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ENROLLMENT_NOT_FOUND));
+
+
+        // Find attendance for this enrollment
+        Optional<Attendance> attendance = attendanceRepository
+                .findByStudentIdAndActivityId(studentId, enrollment.getActivity().getActivityId());
+
+        // Find certificate for this enrollment
+        Optional<Certificate> certificate = certificateRepository
+                .findByEnrollment_EnrollmentId(enrollment.getEnrollmentId());
+
+        return ParticipationHistoryDto.builder()
+                // Enrollment info
+                .enrollmentId(enrollment.getEnrollmentId())
+                .enrollmentStatus(enrollment.getStatus())
+                .appliedAt(enrollment.getAppliedAt())
+                .approvedAt(enrollment.getApprovedAt())
+                .isCompleted(enrollment.getIsCompleted())
+                .completedAt(enrollment.getCompletedAt())
+                .imageUrl(enrollment.getActivity().getImageUrl())
+                // Activity info
+                .activityId(enrollment.getActivity().getActivityId())
+                .activityTitle(enrollment.getActivity().getTitle())
+                .shortDescription(enrollment.getActivity().getShortDescription())
+                .category(enrollment.getActivity().getCategory())
+                .startDateTime(enrollment.getActivity().getStartDateTime())
+                .endDateTime(enrollment.getActivity().getEndDateTime())
+                .address(enrollment.getActivity().getAddress())
+                .ctxhHours(enrollment.getActivity().getTheNumberOfCtxhDay())
+                // Organization info
+                .organizationId(enrollment.getActivity().getOrganization().getOrganizationId())
+                .organizationName(enrollment.getActivity().getOrganization().getOrganizationName())
+                // Attendance info
+                .hasAttendance(attendance.isPresent())
+                .checkInTime(attendance.map(Attendance::getCheckInTime).orElse(null))
+                .checkOutTime(attendance.map(Attendance::getCheckOutTime).orElse(null))
+                .attendanceDuration(attendance.map(Attendance::getAttendanceDurationMinutes).orElse(null))
+                // Certificate info
+                .hasCertificate(certificate.isPresent())
+                .certificateCode(certificate.map(Certificate::getCertificateCode).orElse(null))
+                .build();
+
     }
 
     @Override

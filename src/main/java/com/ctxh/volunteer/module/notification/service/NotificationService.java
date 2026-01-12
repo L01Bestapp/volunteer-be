@@ -41,7 +41,14 @@ public class NotificationService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
 
-        // 2. Save notification to database
+        // 2. Add notification type to data map
+        if (data == null) {
+            data = new HashMap<>();
+        }
+        // Always include type in data for easier frontend handling
+        data.put("type", type.name());
+
+        // 3. Save notification to database
         Notification notification = Notification.builder()
                 .user(user)
                 .title(title)
@@ -53,9 +60,11 @@ public class NotificationService {
                 .build();
 
         notification = notificationRepository.save(notification);
+        data.put("notificationId", notification.getNotificationId());
+        notificationRepository.save(notification);
         log.info("Saved notification to database: {}", notification.getNotificationId());
 
-        // 3. Send push notification if user has token
+        // 4. Send push notification if user has token
         String pushToken = user.getFcmToken();
         if (pushToken != null && !pushToken.isEmpty()) {
             try {

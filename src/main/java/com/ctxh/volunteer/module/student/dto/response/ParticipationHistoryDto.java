@@ -22,6 +22,7 @@ public class ParticipationHistoryDto {
     private LocalDateTime approvedAt;
     private Boolean isCompleted;
     private LocalDateTime completedAt;
+    private String imageUrl;
 
     // Activity info
     private Long activityId;

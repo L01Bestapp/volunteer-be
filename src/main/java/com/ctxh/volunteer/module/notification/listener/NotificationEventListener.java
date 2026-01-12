@@ -6,6 +6,8 @@ import com.ctxh.volunteer.module.enrollment.entity.Enrollment;
 import com.ctxh.volunteer.module.notification.enums.NotificationType;
 import com.ctxh.volunteer.module.notification.event.AttendanceCompletedEvent;
 import com.ctxh.volunteer.module.notification.event.EnrollmentCreatedEvent;
+import com.ctxh.volunteer.module.notification.event.EnrollmentApprovedEvent;
+import com.ctxh.volunteer.module.notification.event.EnrollmentRejectedEvent;
 import com.ctxh.volunteer.module.notification.service.NotificationService;
 import com.ctxh.volunteer.module.organization.entity.Organization;
 import com.ctxh.volunteer.module.student.entity.Student;
@@ -122,6 +124,94 @@ public class NotificationEventListener {
 
         } catch (Exception e) {
             log.error("Error handling enrollment created event: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Handle enrollment approved event
+     */
+    @Async
+    @EventListener
+    public void handleEnrollmentApproved(EnrollmentApprovedEvent event) {
+        try {
+            Enrollment enrollment = event.getEnrollment();
+            Student student = enrollment.getStudent();
+            Activity activity = enrollment.getActivity();
+
+            // Get student user ID
+            Long userId = student.getUser().getUserId();
+
+            // Prepare notification content
+            String title = "Đăng ký hoạt động được chấp nhận";
+            String body = String.format(
+                    "Đăng ký của bạn cho hoạt động \"%s\" đã được chấp nhận. Hãy chuẩn bị và tham gia đúng giờ nhé!",
+                    activity.getTitle()
+            );
+
+            // Prepare additional data
+            Map<String, Object> data = new HashMap<>();
+            data.put("enrollmentId", enrollment.getEnrollmentId());
+            data.put("activityId", activity.getActivityId());
+            data.put("activityTitle", activity.getTitle());
+            data.put("startDateTime", activity.getStartDateTime().toString());
+            data.put("address", activity.getAddress());
+
+            // Send and save notification
+            notificationService.sendAndSaveNotification(
+                    userId,
+                    title,
+                    body,
+                    NotificationType.ENROLLMENT_APPROVED,
+                    data
+            );
+
+            log.info("Sent enrollment approved notification to user {}", userId);
+
+        } catch (Exception e) {
+            log.error("Error handling enrollment approved event: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Handle enrollment rejected event
+     */
+    @Async
+    @EventListener
+    public void handleEnrollmentRejected(EnrollmentRejectedEvent event) {
+        try {
+            Enrollment enrollment = event.getEnrollment();
+            Student student = enrollment.getStudent();
+            Activity activity = enrollment.getActivity();
+
+            // Get student user ID
+            Long userId = student.getUser().getUserId();
+
+            // Prepare notification content
+            String title = "Đăng ký hoạt động bị từ chối";
+            String body = String.format(
+                    "Rất tiếc, đăng ký của bạn cho hoạt động \"%s\" đã bị từ chối. Bạn có thể đăng ký các hoạt động khác.",
+                    activity.getTitle()
+            );
+
+            // Prepare additional data
+            Map<String, Object> data = new HashMap<>();
+            data.put("enrollmentId", enrollment.getEnrollmentId());
+            data.put("activityId", activity.getActivityId());
+            data.put("activityTitle", activity.getTitle());
+
+            // Send and save notification
+            notificationService.sendAndSaveNotification(
+                    userId,
+                    title,
+                    body,
+                    NotificationType.ENROLLMENT_REJECTED,
+                    data
+            );
+
+            log.info("Sent enrollment rejected notification to user {}", userId);
+
+        } catch (Exception e) {
+            log.error("Error handling enrollment rejected event: {}", e.getMessage(), e);
         }
     }
 }

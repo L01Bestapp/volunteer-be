@@ -53,10 +53,11 @@ public interface ActivityRepository extends JpaRepository<Activity, Long>, JpaSp
 
     /**
      * Find activities starting within a specific time window (for reminder notifications)
+     * Include both UPCOMING and ONGOING status to handle activities that may have started check-in
      */
     @Query("SELECT a FROM Activity a WHERE " +
             "a.startDateTime >= :startTime AND a.startDateTime <= :endTime " +
-            "AND a.activityStatus = 'UPCOMING'")
+            "AND a.activityStatus IN ('UPCOMING', 'ONGOING')")
     List<Activity> findActivitiesStartingBetween(
             @Param("startTime") LocalDateTime startTime,
             @Param("endTime") LocalDateTime endTime

@@ -30,34 +30,64 @@ public class ActivityReminderScheduler {
     private final NotificationService notificationService;
 
     /**
-     * Run every 5 minutes to check for activities starting soon
+     * Run every 1 minute to check for activities starting soon
      */
     @Scheduled(cron = "0 */1 * * * *")
     public void sendActivityReminders() {
         try {
-            log.debug("Running activity reminder scheduler");
+            log.info("=== Running activity reminder scheduler at {} ===", LocalDateTime.now());
 
             LocalDateTime now = LocalDateTime.now();
-            LocalDateTime oneHourLater = now.plusHours(1);
-            LocalDateTime fiveMinutesLater = now.plusMinutes(5);
+            // Window: send reminder for activities starting in 55-65 minutes
+            LocalDateTime reminderWindowStart = now.plusMinutes(55);
+            LocalDateTime reminderWindowEnd = now.plusMinutes(65);
 
-            // Find activities starting within the next hour
-            // We use a 5-minute window to avoid missing activities
+            log.info("Searching for activities starting between {} and {}",
+                    reminderWindowStart, reminderWindowEnd);
+
+            // Find activities starting within the reminder window
             List<Activity> upcomingActivities = activityRepository.findActivitiesStartingBetween(
                     now,
-                    oneHourLater.plusMinutes(5)
+                    reminderWindowEnd
             );
 
-            log.debug("Found {} activities starting within the next hour", upcomingActivities.size());
+            log.info("Found {} activities in reminder window", upcomingActivities.size());
+
+            if (upcomingActivities.isEmpty()) {
+                log.warn("⚠️ No activities found in reminder window!");
+                log.warn("Debug info:");
+                log.warn("  - Current time: {}", now);
+                log.warn("  - Searching for activities starting between {} and {}", reminderWindowStart, reminderWindowEnd);
+                log.warn("  - Query is looking for activities with status IN ('UPCOMING', 'ONGOING')");
+                log.warn("Please check: 1) Activity exists? 2) Activity status is UPCOMING or ONGOING? 3) startDateTime is in the window?");
+                return;
+            }
+
+            log.info("Activities found:");
+            for (Activity act : upcomingActivities) {
+                log.info("  - '{}' (ID: {}, Status: {}, Start: {})",
+                        act.getTitle(), act.getActivityId(), act.getActivityStatus(), act.getStartDateTime());
+            }
 
             for (Activity activity : upcomingActivities) {
+                log.info("Processing activity: '{}' (ID: {}) starting at {}",
+                        activity.getTitle(), activity.getActivityId(), activity.getStartDateTime());
+
                 // Get all approved enrollments for this activity
                 List<Enrollment> enrollments = enrollmentRepository.findByActivityIdAndStatus(
                         activity.getActivityId(),
                         EnrollmentStatus.APPROVED
                 );
 
-                log.debug("Activity '{}' has {} enrolled students", activity.getTitle(), enrollments.size());
+                log.info("Activity '{}' has {} approved enrollments", activity.getTitle(), enrollments.size());
+
+                if (enrollments.isEmpty()) {
+                    log.info("No approved enrollments for activity '{}', skipping", activity.getTitle());
+                    continue;
+                }
+
+                int remindersSent = 0;
+                int remindersSkipped = 0;
 
                 for (Enrollment enrollment : enrollments) {
                     Long userId = enrollment.getStudent().getUser().getUserId();
@@ -65,13 +95,20 @@ public class ActivityReminderScheduler {
                     // Check if reminder already sent to avoid spam
                     if (notificationService.hasReminderBeenSent(userId, activity.getActivityId())) {
                         log.debug("Reminder already sent to user {} for activity {}", userId, activity.getActivityId());
+                        remindersSkipped++;
                         continue;
                     }
 
                     // Send reminder notification
                     sendReminderNotification(userId, activity);
+                    remindersSent++;
                 }
+
+                log.info("Activity '{}': Sent {} reminders, Skipped {} (already sent)",
+                        activity.getTitle(), remindersSent, remindersSkipped);
             }
+
+            log.info("=== Activity reminder scheduler completed ===");
 
         } catch (Exception e) {
             log.error("Error in activity reminder scheduler: {}", e.getMessage(), e);

@@ -117,11 +117,23 @@ public class StudentController {
      */
     @Operation(summary = "get student's participation history")
     @GetMapping("/participation/history")
-    public ApiResponse<List<ParticipationHistoryDto>> getParticipationHistory(
-            @RequestParam("studentId") Long studentId) {
+    @PreAuthorize("hasRole('STUDENT')")
+    public ApiResponse<List<ParticipationHistoryDto>> getParticipationHistory() {
+        Long studentId = AuthUtil.getIdFromAuthentication();
         return ApiResponse.ok(
                 "Participation history retrieved successfully",
                 studentService.getParticipationHistory(studentId)
+        );
+    }
+
+    @Operation(summary = "get one student's participation history")
+    @GetMapping("/participation/history-detail")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ApiResponse<ParticipationHistoryDto> getParticipationHistoryDetail(@RequestParam("activityId") Long activityId) {
+        Long studentId = AuthUtil.getIdFromAuthentication();
+        return ApiResponse.ok(
+                "Participation history retrieved successfully",
+                studentService.getOneParticipationHistory(studentId, activityId)
         );
     }
 

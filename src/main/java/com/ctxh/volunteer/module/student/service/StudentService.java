@@ -24,6 +24,8 @@ public interface StudentService {
      */
     List<ParticipationHistoryDto> getParticipationHistory(Long studentId);
 
+    ParticipationHistoryDto getOneParticipationHistory(Long studentId, Long activityId);
+
     /**
      * Get student's certificates
      */
