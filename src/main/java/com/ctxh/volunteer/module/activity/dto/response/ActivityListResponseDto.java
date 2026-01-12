@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ActivityListResponseDto {
     private Long activityId;
+    private String organizationName;
     private String title;
     private String shortDescription;
     private String imageUrl;

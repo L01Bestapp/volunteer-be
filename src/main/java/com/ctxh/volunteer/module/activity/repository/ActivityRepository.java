@@ -1,6 +1,7 @@
 package com.ctxh.volunteer.module.activity.repository;
 
 import com.ctxh.volunteer.module.activity.entity.Activity;
+import com.ctxh.volunteer.module.activity.enums.ActivityStatus;
 import com.ctxh.volunteer.module.organization.entity.Organization;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -60,4 +61,23 @@ public interface ActivityRepository extends JpaRepository<Activity, Long>, JpaSp
             @Param("startTime") LocalDateTime startTime,
             @Param("endTime") LocalDateTime endTime
     );
+
+    /**
+     * Count activities by organization and status
+     */
+    @Query("SELECT COUNT(a) FROM Activity a WHERE a.organization.organizationId = :organizationId AND a.activityStatus = :status")
+    Long countByOrganizationIdAndStatus(@Param("organizationId") Long organizationId, @Param("status") ActivityStatus status);
+
+    /**
+     * Count all activities by organization
+     */
+    @Query("SELECT COUNT(a) FROM Activity a WHERE a.organization.organizationId = :organizationId")
+    Long countByOrganizationId(@Param("organizationId") Long organizationId);
+
+    /**
+     * Sum all max participants by organization
+     */
+    @Query("SELECT COALESCE(SUM(a.maxParticipants), 0) FROM Activity a WHERE a.organization.organizationId = :organizationId " +
+            "and a.endDateTime < CURRENT_TIMESTAMP")
+    Long sumMaxParticipantsByOrganizationId(@Param("organizationId") Long organizationId);
 }

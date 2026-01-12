@@ -16,4 +16,5 @@ public class GoogleSignInResponseDto {
     private String refreshToken;
     private Long userId;
     private boolean profileComplete;
+    private String role;
 }

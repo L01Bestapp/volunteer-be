@@ -5,6 +5,7 @@ import com.ctxh.volunteer.common.util.AuthUtil;
 import com.ctxh.volunteer.module.organization.dto.request.CreateOrganizationRequestDto;
 import com.ctxh.volunteer.module.organization.dto.request.UpdateOrganizationRequestDto;
 import com.ctxh.volunteer.module.organization.dto.response.OrganizationResponseDto;
+import com.ctxh.volunteer.module.organization.dto.response.OrganizationStatisticsResponseDto;
 import com.ctxh.volunteer.module.organization.service.OrganizationService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import jakarta.validation.Valid;
@@ -85,6 +86,20 @@ public class OrganizationController {
         return ApiResponse.ok(
                 "retrieved Organization successfully",
                 organizationService.getOrganizationById(organizationId)
+        );
+    }
+
+    /**
+     * Get organization statistics
+     * GET /api/v1/organization/statistics
+     */
+    @GetMapping("/statistics")
+    @PreAuthorize("hasRole('ORGANIZATION')")
+    public ApiResponse<OrganizationStatisticsResponseDto> getStatistics() {
+        Long organizationId = AuthUtil.getIdFromAuthentication();
+        return ApiResponse.ok(
+                "Retrieved organization statistics successfully",
+                organizationService.getStatistics(organizationId)
         );
     }
 }

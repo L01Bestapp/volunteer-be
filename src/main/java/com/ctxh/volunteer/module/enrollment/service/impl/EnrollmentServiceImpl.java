@@ -11,11 +11,13 @@ import com.ctxh.volunteer.module.enrollment.dto.MyActivityResponseDto;
 import com.ctxh.volunteer.module.enrollment.entity.Enrollment;
 import com.ctxh.volunteer.module.enrollment.repository.EnrollmentRepository;
 import com.ctxh.volunteer.module.enrollment.service.EnrollmentService;
+import com.ctxh.volunteer.module.notification.event.EnrollmentCreatedEvent;
 import com.ctxh.volunteer.module.student.entity.Student;
 import com.ctxh.volunteer.module.student.repository.StudentRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +32,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     private final EnrollmentRepository enrollmentRepository;
     private final ActivityRepository activityRepository;
     private final StudentRepository studentRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -45,7 +48,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         // Check if a student already enrolled
         enrollmentRepository.findByStudentIdAndActivityId(studentId, requestDto.getActivityId())
                 .ifPresent(enrollment -> {
-                    throw new BusinessException(ErrorCode.ALREADY_ENROLLED);
+                    throw new BusinessException(ErrorCode.ALREADY_REGISTRATION);
                 });
 
         // Check if activity can accept registration - USE HELPER METHOD
@@ -69,6 +72,9 @@ public class EnrollmentServiceImpl implements EnrollmentService {
 
         Enrollment savedEnrollment = enrollmentRepository.save(enrollment);
         log.info("Student {} enrolled in activity {}", studentId, requestDto.getActivityId());
+
+        // Publish event for notification
+        eventPublisher.publishEvent(new EnrollmentCreatedEvent(this, savedEnrollment));
 
         return mapToEnrollmentResponseDto(savedEnrollment);
     }
@@ -162,6 +168,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         return MyActivityResponseDto.builder()
                 .enrollmentId(enrollment.getEnrollmentId())
                 .enrollmentStatus(enrollment.getStatus())
+                .activityImage(activity.getImageUrl())
                 .appliedAt(enrollment.getAppliedAt())
                 .approvedAt(enrollment.getApprovedAt())
                 .isCompleted(enrollment.getIsCompleted())

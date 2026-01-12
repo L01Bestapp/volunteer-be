@@ -1,5 +1,7 @@
 package com.ctxh.volunteer.module.notification.service;
 
+import com.google.firebase.messaging.AndroidConfig;
+import com.google.firebase.messaging.AndroidNotification;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
@@ -31,27 +33,38 @@ public class FCMService {
                 return null;
             }
 
-            // Build notification
+            // Build notification payload (displayed by OS)
             Notification notification = Notification.builder()
                     .setTitle(title)
                     .setBody(body)
                     .build();
 
-            // Build message
+            // Build Android Config (CRITICAL for Popup/Heads-up notification)
+            // This ensures notifications appear as popup banner on Android devices
+            AndroidConfig androidConfig = AndroidConfig.builder()
+                    .setPriority(AndroidConfig.Priority.HIGH) // HIGH priority to trigger heads-up display
+                    .setNotification(AndroidNotification.builder()
+                            .setChannelId("default") // Must match channel ID configured in React Native app
+                            .setSound("default")     // Play default notification sound
+                            .build())
+                    .build();
+
+            // Build message with Android Config
             Message.Builder messageBuilder = Message.builder()
                     .setToken(fcmToken)
-                    .setNotification(notification);
+                    .setNotification(notification)
+                    .setAndroidConfig(androidConfig); // Add Android-specific configuration
 
-            // Add data if provided
+            // Add data payload if provided
             if (data != null && !data.isEmpty()) {
                 messageBuilder.putAllData(data);
             }
 
             Message message = messageBuilder.build();
 
-            // Send message
+            // Send message via Firebase
             String response = FirebaseMessaging.getInstance().send(message);
-            log.info("Successfully sent FCM message. Message ID: {}", response);
+            log.info("Successfully sent FCM message with Android config. Message ID: {}", response);
             return response;
 
         } catch (FirebaseMessagingException e) {

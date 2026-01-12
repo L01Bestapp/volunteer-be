@@ -97,6 +97,8 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(request.getEmail()).orElseThrow(
                 () -> new BusinessException(ErrorCode.EMAIL_OR_PASSWORD_INCORRECT)
         );
+        if (!user.getIsVerified()) throw new BusinessException(ErrorCode.EMAIL_NOT_VERIFIED);
+
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             user.setFailedLoginAttempts(user.getFailedLoginAttempts() + 1);
             throw new BusinessException(ErrorCode.EMAIL_OR_PASSWORD_INCORRECT);
@@ -281,11 +283,23 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public void logout(String refreshToken) {
         JWTClaimsSet claimsSet = introspectToken.parseAndVerifyToken(refreshToken, rsaKeyRecord.rsaPublicKey());
         if (claimsSet == null || !PurposeToken.REFRESH.name().equals(claimsSet.getClaim(AppConstants.PURPOSE))) {
             throw new BusinessException(ErrorCode.TOKEN_INVALID);
         }
+
+        // Lấy user từ refresh token
+        Long userId = Long.valueOf(claimsSet.getSubject());
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        // Xóa FCM token
+        user.setFcmToken(null);
+        userRepository.save(user);
+
+        // Xóa refresh token
         revokeToken(claimsSet.getJWTID());
     }
 
@@ -353,7 +367,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public GoogleSignInResponseDto verifyGoogleIdToken(String idToken) {
+    public GoogleSignInResponseDto verifyGoogleIdTokenForStudent(String idToken) {
         log.info("Begin verify Google ID token");
 
         // 1. Verify ID Token với Google
@@ -395,6 +409,10 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(ErrorCode.ACCOUNT_LOCKED);
         }
 
+        String[] roles = user.getRoles().stream().map(Role::getRoleName).toArray(String[]::new);
+        String role = roles[0];
+        if (roles.length == 3) role = "ADMIN";
+
         // 6. Generate JWT tokens
         String accessToken = generateToken(user, PurposeToken.ACCESS);
         String refreshToken = generateToken(user, PurposeToken.REFRESH);
@@ -413,8 +431,50 @@ public class AuthServiceImpl implements AuthService {
                 .refreshToken(refreshToken)
                 .userId(user.getUserId())
                 .profileComplete(profileComplete)
+                .role(role)
                 .build();
     }
+
+    @Override
+    public TokenResponse loginWithGoogle(String idToken) {
+        log.info("Begin verify Google ID token");
+
+        // 1. Verify ID Token với Google
+        Map<String, Object> googleUserInfo = verifyTokenWithGoogle(idToken);
+
+        // 2. Extract user info từ token payload
+        String email = (String) googleUserInfo.get("email");
+        // 4. Kiểm tra user đã tồn tại chưa
+        User user = userRepository.findByEmail(email).orElseThrow(
+                () -> new BusinessException(ErrorCode.USER_NOT_FOUND)
+        );
+
+        // 5. Kiểm tra account status
+        if (Boolean.TRUE.equals(user.getIsLocked())) {
+            throw new BusinessException(ErrorCode.ACCOUNT_LOCKED);
+        }
+
+        String[] roles = user.getRoles().stream().map(Role::getRoleName).toArray(String[]::new);
+        String role = roles[0];
+        if (roles.length == 3) role = "ADMIN";
+
+        // 6. Generate JWT tokens
+        String accessToken = generateToken(user, PurposeToken.ACCESS);
+        String refreshToken = generateToken(user, PurposeToken.REFRESH);
+
+        // 7. Update last login
+        user.recordSuccessfulLogin();
+        userRepository.save(user);
+
+        log.info("Google sign-in successful for user: {}", email);
+
+        return TokenResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .role(role)
+                .build();
+    }
+
 
     @Override
     @Transactional

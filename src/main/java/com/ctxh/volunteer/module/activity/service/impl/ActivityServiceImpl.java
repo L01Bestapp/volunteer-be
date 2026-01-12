@@ -438,6 +438,7 @@ public class ActivityServiceImpl implements ActivityService {
         return ActivityListResponseDto.builder()
                 .activityId(activity.getActivityId())
                 .title(activity.getTitle())
+                .organizationName(activity.getOrganization().getOrganizationName())
                 .shortDescription(activity.getShortDescription())
                 .imageUrl(activity.getImageUrl())
                 .category(activity.getCategory())

@@ -4,6 +4,7 @@ import com.ctxh.volunteer.common.dto.ApiResponse;
 import jakarta.validation.ValidationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -40,6 +41,11 @@ public class GlobalExceptionHandler {
         ErrorCode errorCode = ErrorCode.INVALID_ARGUMENT;
         ApiResponse<?> response = ApiResponse.error(errorCode.getCode(), ex.getMessage());
         return ResponseEntity.badRequest().body(response);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public void handleAccessDeniedException(AccessDeniedException ex) {
+        throw ex; // Ném lại để Spring Security xử lý bằng CustomAccessDeniedHandler
     }
 
 

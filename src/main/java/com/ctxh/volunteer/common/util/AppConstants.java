@@ -3,7 +3,7 @@ package com.ctxh.volunteer.common.util;
 public final class AppConstants {
     private AppConstants() {}
 
-    public static final String DEFAULT_AVATAR_URL = "https://example.com/default-avatar.png";
+    public static final String DEFAULT_AVATAR_URL = "https://res.cloudinary.com/dbywvbarq/image/upload/v1768123749/pof2d8pkvybszxmgoxij.jpg";
     public static final int REGISTRATION_MULTIPLIER = 3;
     public static final String PURPOSE = "purpose";
     public static final String CLIENT_ID = "client_id";

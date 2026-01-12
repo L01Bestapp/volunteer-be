@@ -64,12 +64,12 @@ public class SecurityConfig {
                 .requestMatchers(whiteList).permitAll()
                 .anyRequest().authenticated());
         http.oauth2ResourceServer(oauth2 -> oauth2
+                .authenticationEntryPoint(customAuthenticationEntryPoint)
+                .accessDeniedHandler(accessDeniedHandler)
                 .jwt(jwt -> jwt
                         .decoder(customJwtDecoder)
                         .jwtAuthenticationConverter(customAuthenticationConverter)
                 )
-                .authenticationEntryPoint(customAuthenticationEntryPoint)
-                .accessDeniedHandler(accessDeniedHandler)
         );
 
         return http.build();

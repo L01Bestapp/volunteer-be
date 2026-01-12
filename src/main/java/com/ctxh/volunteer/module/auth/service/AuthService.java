@@ -25,7 +25,8 @@ public interface AuthService {
     boolean isRefreshTokenValid(String uuidToken);
     void completeStudentProfile(CompleteProfile request);
     String uploadImage(MultipartFile file);
-    GoogleSignInResponseDto verifyGoogleIdToken(String idToken);
+    GoogleSignInResponseDto verifyGoogleIdTokenForStudent(String idToken);
+    TokenResponse loginWithGoogle(String idToken);
 
     void banUser(Long userId);
 

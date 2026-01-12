@@ -18,7 +18,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
-import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -67,11 +66,18 @@ public class AuthController {
 
 
 
-    @Operation(description = "Login with Google", summary = "Authenticate with Google and return JWT tokens")
+    @Operation(description = "Sign-up with Google", summary = "Authenticate with Google and return JWT tokens")
     @SecurityRequirements()
-    @PostMapping("/google")
-    public ApiResponse<GoogleSignInResponseDto> loginWithGoogle(@RequestBody @Valid GoogleIdTokenRequest request){
-        return ApiResponse.ok("Google sign-in successful", authService.verifyGoogleIdToken(request.idToken()));
+    @PostMapping("/sign-up-with-google-for-student")
+    public ApiResponse<GoogleSignInResponseDto> signUpWithGoogleForStudent(@RequestBody @Valid GoogleIdTokenRequest request){
+        return ApiResponse.ok("Google sign-in successful", authService.verifyGoogleIdTokenForStudent(request.idToken()));
+    }
+
+    @Operation(description = "login with google", summary = "login with google")
+    @SecurityRequirements()
+    @PostMapping("/login-with-google")
+    public ApiResponse<TokenResponse> loginWithGoogle(@RequestBody @Valid GoogleIdTokenRequest request){
+        return ApiResponse.ok("Google login successful", authService.loginWithGoogle(request.idToken()));
     }
 
     @Operation(summary = "Complete profile", description = "Complete user profile after registration")

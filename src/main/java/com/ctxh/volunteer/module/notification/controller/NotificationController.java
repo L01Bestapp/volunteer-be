@@ -3,8 +3,10 @@ package com.ctxh.volunteer.module.notification.controller;
 import com.ctxh.volunteer.common.dto.ApiResponse;
 import com.ctxh.volunteer.common.util.AuthUtil;
 import com.ctxh.volunteer.module.notification.dto.NotificationResponseDto;
+import com.ctxh.volunteer.module.notification.dto.TestNotificationRequestDto;
 import com.ctxh.volunteer.module.notification.dto.UpdateFcmTokenRequestDto;
 import com.ctxh.volunteer.module.notification.entity.Notification;
+import com.ctxh.volunteer.module.notification.enums.NotificationType;
 import com.ctxh.volunteer.module.notification.service.NotificationService;
 import com.ctxh.volunteer.module.auth.repository.UserRepository;
 import com.ctxh.volunteer.module.auth.entity.User;
@@ -17,7 +19,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -137,6 +141,57 @@ public class NotificationController {
 
         log.info("Updated FCM token for user {}", userId);
         return ApiResponse.ok("FCM token updated successfully");
+    }
+
+    /**
+     * Send test notification to current user (for testing/debugging)
+     * POST /api/v1/notifications/test
+     */
+    @PostMapping("/test")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Send test notification to current user (for testing purposes)")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<Void> sendTestNotification(@Valid @RequestBody TestNotificationRequestDto requestDto) {
+        Long userId = AuthUtil.getIdFromAuthentication();
+
+        // Prepare data payload
+        Map<String, Object> data = new HashMap<>();
+
+        // Add type
+        String type = requestDto.getType() != null ? requestDto.getType() : "GENERAL";
+
+        // Add activityId if provided
+        if (requestDto.getActivityId() != null && !requestDto.getActivityId().isEmpty()) {
+            data.put("activityId", requestDto.getActivityId());
+        }
+
+        // Add custom data if provided
+        if (requestDto.getCustomData() != null && !requestDto.getCustomData().isEmpty()) {
+            data.put("customData", requestDto.getCustomData());
+        }
+
+        // Add test flag
+        data.put("isTest", true);
+
+        // Determine notification type
+        NotificationType notificationType;
+        try {
+            notificationType = NotificationType.valueOf(type);
+        } catch (IllegalArgumentException e) {
+            notificationType = NotificationType.GENERAL;
+        }
+
+        // Send notification
+        notificationService.sendAndSaveNotification(
+                userId,
+                requestDto.getTitle(),
+                requestDto.getBody(),
+                notificationType,
+                data
+        );
+
+        log.info("Sent test notification to user {}", userId);
+        return ApiResponse.ok("Test notification sent successfully");
     }
 
     // ============ MAPPING METHODS ============

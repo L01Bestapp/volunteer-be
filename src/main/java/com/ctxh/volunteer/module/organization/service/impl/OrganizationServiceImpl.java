@@ -2,13 +2,21 @@ package com.ctxh.volunteer.module.organization.service.impl;
 
 import com.ctxh.volunteer.common.exception.BusinessException;
 import com.ctxh.volunteer.common.exception.ErrorCode;
+import com.ctxh.volunteer.module.activity.enums.ActivityStatus;
+import com.ctxh.volunteer.module.activity.repository.ActivityRepository;
+import com.ctxh.volunteer.module.attendance.repository.AttendanceRepository;
 import com.ctxh.volunteer.module.auth.RoleEnum;
 import com.ctxh.volunteer.module.auth.entity.Role;
 import com.ctxh.volunteer.module.auth.repository.RoleRepository;
 import com.ctxh.volunteer.module.auth.service.AuthService;
+import com.ctxh.volunteer.module.enrollment.repository.EnrollmentRepository;
 import com.ctxh.volunteer.module.organization.dto.request.CreateOrganizationRequestDto;
 import com.ctxh.volunteer.module.organization.dto.request.UpdateOrganizationRequestDto;
+import com.ctxh.volunteer.module.organization.dto.response.ActivityStatsDto;
+import com.ctxh.volunteer.module.organization.dto.response.ImpactStatsDto;
 import com.ctxh.volunteer.module.organization.dto.response.OrganizationResponseDto;
+import com.ctxh.volunteer.module.organization.dto.response.OrganizationStatisticsResponseDto;
+import com.ctxh.volunteer.module.organization.dto.response.ParticipantStatsDto;
 import com.ctxh.volunteer.module.organization.entity.Organization;
 import com.ctxh.volunteer.module.organization.enums.OrganizationType;
 import com.ctxh.volunteer.module.organization.repository.OrganizationRepository;
@@ -33,6 +41,9 @@ public class OrganizationServiceImpl implements OrganizationService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final AuthService authService;
+    private final ActivityRepository activityRepository;
+    private final EnrollmentRepository enrollmentRepository;
+    private final AttendanceRepository attendanceRepository;
 
     @Override
     public OrganizationResponseDto registerOrganization(CreateOrganizationRequestDto requestDto) {
@@ -121,6 +132,64 @@ public class OrganizationServiceImpl implements OrganizationService {
         return organizationRepository.findAll().stream().map(this::mapToOrganizationResponseDto).toList();
     }
 
+    @Override
+    public OrganizationStatisticsResponseDto getStatistics(Long organizationId) {
+        // Verify organization exists
+        organizationRepository.findById(organizationId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORGANIZATION_NOT_FOUND));
+
+        // 1. Activity Stats
+        Long totalActivities = activityRepository.countByOrganizationId(organizationId);
+        Long upcomingCount = activityRepository.countByOrganizationIdAndStatus(organizationId, ActivityStatus.UPCOMING);
+        Long ongoingCount = activityRepository.countByOrganizationIdAndStatus(organizationId, ActivityStatus.ONGOING);
+        Long completedCount = activityRepository.countByOrganizationIdAndStatus(organizationId, ActivityStatus.COMPLETED);
+        Long canceledCount = 0L; // Not implemented yet - can be added later if needed
+
+        ActivityStatsDto activityStats = ActivityStatsDto.builder()
+                .totalActivities(totalActivities)
+                .upcomingCount(upcomingCount)
+                .ongoingCount(ongoingCount)
+                .completedCount(completedCount)
+                .canceledCount(canceledCount)
+                .build();
+
+        // 2. Participant Stats
+        Long totalSlots = activityRepository.sumMaxParticipantsByOrganizationId(organizationId);
+        Long totalRegistrations = enrollmentRepository.countByOrganizationId(organizationId);
+        Long totalApproved = enrollmentRepository.countApprovedByOrganizationId(organizationId);
+        Long totalAttended = attendanceRepository.countPresentByOrganizationId(organizationId);
+
+        // Calculate attendance rate: (Attended / Approved) * 100
+        Double avgAttendanceRate = 0.0;
+        if (totalApproved > 0) {
+            avgAttendanceRate = (totalAttended.doubleValue() / totalApproved.doubleValue()) * 100.0;
+            avgAttendanceRate = Math.round(avgAttendanceRate * 100.0) / 100.0; // Round to 2 decimal places
+        }
+
+        ParticipantStatsDto participantStats = ParticipantStatsDto.builder()
+                .totalSlots(totalSlots)
+                .totalRegistrations(totalRegistrations)
+                .totalApproved(totalApproved)
+                .totalAttended(totalAttended)
+                .avgAttendanceRate(avgAttendanceRate)
+                .build();
+
+        // 3. Impact Stats
+        Double totalCtxhDaysGenerated = attendanceRepository.sumCtxhDaysByOrganizationId(organizationId);
+        totalCtxhDaysGenerated = Math.round(totalCtxhDaysGenerated * 10.0) / 10.0; // Round to 1 decimal place
+
+        ImpactStatsDto impactStats = ImpactStatsDto.builder()
+                .totalCtxhDaysGenerated(totalCtxhDaysGenerated)
+                .build();
+
+        log.info("Retrieved statistics for organization ID: {}", organizationId);
+
+        return OrganizationStatisticsResponseDto.builder()
+                .activityStats(activityStats)
+                .participantStats(participantStats)
+                .impactStats(impactStats)
+                .build();
+    }
 
     private OrganizationResponseDto mapToOrganizationResponseDto(Organization organization) {
         return OrganizationResponseDto.builder()

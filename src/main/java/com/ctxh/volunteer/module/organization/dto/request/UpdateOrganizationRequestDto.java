@@ -16,9 +16,9 @@ import lombok.Setter;
 @NoArgsConstructor
 @Builder
 public class UpdateOrganizationRequestDto {
-    @Pattern(regexp = "^([\\p{L}]{2,})(\\s+[\\p{L}]{2,}){1,6}$",
-            message = "Representative Name must contain only letters and spaces, with at least two words")
-    @Size(max = 100, message = "Representative Name must not exceed 100 characters")
+    @Pattern(regexp = "^[\\p{L}]+(\\s+[\\p{L}]+)+$",
+            message = "Tên người đại diện phải bao gồm ít nhất 2 từ, chỉ chứa chữ cái và khoảng trắng")
+    @Size(max = 100, message = "Tên người đại diện không được vượt quá 100 ký tự")
     private String representativeName;
 
     @Pattern(regexp = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$", message = "email must be a valid email address")

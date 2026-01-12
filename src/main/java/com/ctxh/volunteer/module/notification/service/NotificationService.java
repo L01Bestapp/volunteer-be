@@ -22,6 +22,7 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
     private final FCMService fcmService;
+    private final ExpoPushService expoPushService;
 
     /**
      * Send and save notification
@@ -54,27 +55,39 @@ public class NotificationService {
         notification = notificationRepository.save(notification);
         log.info("Saved notification to database: {}", notification.getNotificationId());
 
-        // 3. Send via FCM if user has FCM token
-        String fcmToken = user.getFcmToken();
-        if (fcmToken != null && !fcmToken.isEmpty()) {
+        // 3. Send push notification if user has token
+        String pushToken = user.getFcmToken();
+        if (pushToken != null && !pushToken.isEmpty()) {
             try {
-                // Convert data to Map<String, String> for FCM
-                Map<String, String> fcmData = convertToStringMap(data);
+                // Convert data to Map<String, String>
+                Map<String, String> stringData = convertToStringMap(data);
 
-                String messageId = fcmService.sendNotification(fcmToken, title, body, fcmData);
+                boolean success = false;
 
-                if (messageId != null) {
+                // Detect token type and use appropriate service
+                if (isExpoToken(pushToken)) {
+                    // Use Expo Push Service for Expo tokens
+                    log.info("Detected Expo push token, using ExpoPushService");
+                    success = expoPushService.sendNotification(pushToken, title, body, stringData);
+                } else {
+                    // Use FCM Service for native FCM tokens
+                    log.info("Detected native FCM token, using FCMService");
+                    String messageId = fcmService.sendNotification(pushToken, title, body, stringData);
+                    success = (messageId != null);
+                }
+
+                if (success) {
                     notification.markAsSent();
                     notificationRepository.save(notification);
-                    log.info("Successfully sent FCM notification to user {}", userId);
+                    log.info("Successfully sent push notification to user {}", userId);
                 } else {
-                    log.warn("Failed to send FCM notification to user {}", userId);
+                    log.warn("Failed to send push notification to user {}", userId);
                 }
             } catch (Exception e) {
-                log.error("Error sending FCM notification to user {}: {}", userId, e.getMessage());
+                log.error("Error sending push notification to user {}: {}", userId, e.getMessage());
             }
         } else {
-            log.warn("User {} does not have FCM token, skipping push notification", userId);
+            log.warn("User {} does not have push token, skipping push notification", userId);
         }
 
         return notification;
@@ -147,7 +160,7 @@ public class NotificationService {
     }
 
     /**
-     * Convert Map<String, Object> to Map<String, String> for FCM
+     * Convert Map<String, Object> to Map<String, String> for push services
      */
     private Map<String, String> convertToStringMap(Map<String, Object> data) {
         if (data == null) {
@@ -161,5 +174,16 @@ public class NotificationService {
             }
         });
         return stringMap;
+    }
+
+    /**
+     * Check if token is an Expo push token
+     */
+    private boolean isExpoToken(String token) {
+        if (token == null || token.isEmpty()) {
+            return false;
+        }
+        // Expo tokens have format: ExponentPushToken[xxx] or ExpoPushToken[xxx]
+        return token.startsWith("ExponentPushToken[") || token.startsWith("ExpoPushToken[");
     }
 }

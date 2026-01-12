@@ -3,6 +3,7 @@ package com.ctxh.volunteer.module.attendance.service.impl;
 import com.ctxh.volunteer.common.exception.BusinessException;
 import com.ctxh.volunteer.common.exception.ErrorCode;
 import com.ctxh.volunteer.module.activity.entity.Activity;
+import com.ctxh.volunteer.module.activity.enums.ActivityStatus;
 import com.ctxh.volunteer.module.activity.repository.ActivityRepository;
 import com.ctxh.volunteer.module.attendance.dto.AttendanceResponseDto;
 import com.ctxh.volunteer.module.attendance.dto.AttendanceSummaryDto;
@@ -18,7 +19,6 @@ import com.ctxh.volunteer.module.enrollment.repository.EnrollmentRepository;
 import com.ctxh.volunteer.module.notification.event.AttendanceCompletedEvent;
 import com.ctxh.volunteer.module.student.entity.Student;
 import com.ctxh.volunteer.module.student.repository.StudentRepository;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -96,7 +96,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         } catch (IllegalStateException e) {
             throw new BusinessException(ErrorCode.ALREADY_CHECKED_IN);
         }
-
+        activity.setActivityStatus(ActivityStatus.ONGOING);
         Attendance savedAttendance = attendanceRepository.save(attendance);
         log.info("Student {} checked in to activity {}", student.getStudentId(), activity.getActivityId());
 
@@ -169,6 +169,7 @@ public class AttendanceServiceImpl implements AttendanceService {
             }
         }
 
+        activity.setActivityStatus(ActivityStatus.COMPLETED);
         Attendance savedAttendance = attendanceRepository.save(attendance);
         log.info("Student {} checked out from activity {}", student.getStudentId(), activity.getActivityId());
 

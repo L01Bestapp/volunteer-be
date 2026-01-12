@@ -7,31 +7,42 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.Resource;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 @Slf4j
 @Configuration
 public class FirebaseConfig {
 
-    @Value("${firebase.config.file:classpath:firebase-service-account.json}")
-    private Resource firebaseConfigResource;
+    @Value("${FIREBASE_SERVICE_ACCOUNT_JSON:}")
+    private String firebaseServiceAccountJson;
 
     @Bean
     public FirebaseApp initializeFirebase() {
         try {
             // Check if FirebaseApp is already initialized
             if (FirebaseApp.getApps().isEmpty()) {
-                InputStream serviceAccount = firebaseConfigResource.getInputStream();
+
+                // Check if Firebase credentials are provided
+                if (firebaseServiceAccountJson == null || firebaseServiceAccountJson.trim().isEmpty()) {
+                    log.warn("Firebase credentials not found in environment variables");
+                    log.warn("Set FIREBASE_SERVICE_ACCOUNT_JSON environment variable to enable FCM notifications");
+                    return null;
+                }
+
+                // Convert JSON string to InputStream
+                ByteArrayInputStream serviceAccount = new ByteArrayInputStream(
+                        firebaseServiceAccountJson.getBytes(StandardCharsets.UTF_8)
+                );
 
                 FirebaseOptions options = FirebaseOptions.builder()
                         .setCredentials(GoogleCredentials.fromStream(serviceAccount))
                         .build();
 
                 FirebaseApp firebaseApp = FirebaseApp.initializeApp(options);
-                log.info("Firebase Admin SDK initialized successfully");
+                log.info("Firebase Admin SDK initialized successfully from environment variables");
                 return firebaseApp;
             } else {
                 log.info("FirebaseApp already initialized");
@@ -39,7 +50,7 @@ public class FirebaseConfig {
             }
         } catch (IOException e) {
             log.error("Failed to initialize Firebase Admin SDK: {}", e.getMessage());
-            log.warn("FCM notifications will not work. Please add firebase-service-account.json to resources folder");
+            log.warn("FCM notifications will not work. Please check FIREBASE_SERVICE_ACCOUNT_JSON environment variable");
             return null;
         } catch (Exception e) {
             log.error("Unexpected error while initializing Firebase: {}", e.getMessage(), e);

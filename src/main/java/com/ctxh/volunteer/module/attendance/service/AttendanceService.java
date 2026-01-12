@@ -4,7 +4,6 @@ import com.ctxh.volunteer.module.attendance.dto.AttendanceResponseDto;
 import com.ctxh.volunteer.module.attendance.dto.AttendanceSummaryDto;
 import com.ctxh.volunteer.module.attendance.dto.QrCheckInRequestDto;
 import com.ctxh.volunteer.module.attendance.dto.QrCheckOutRequestDto;
-import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -20,7 +19,7 @@ public interface AttendanceService {
     /**
      * Check out student using QR code
      */
-    AttendanceResponseDto checkOut(@Valid QrCheckOutRequestDto requestDto);
+    AttendanceResponseDto checkOut(QrCheckOutRequestDto requestDto);
 
     /**
      * Get all attendance records for an activity

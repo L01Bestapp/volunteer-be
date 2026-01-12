@@ -96,4 +96,24 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
     );
 
     Long countByActivityAndStatus(Activity activity, EnrollmentStatus status);
+
+    /**
+     * Count all enrollments by organization ID (through activity)
+     */
+    @Query("SELECT COUNT(e) FROM Enrollment e WHERE e.activity.organization.organizationId = :organizationId " +
+            "AND e.activity.endDateTime < CURRENT_TIMESTAMP")
+    Long countByOrganizationId(@Param("organizationId") Long organizationId);
+
+    /**
+     * Count approved enrollments by organization ID (only for ended activities)
+     */
+    @Query("SELECT COUNT(e) FROM Enrollment e WHERE e.activity.organization.organizationId = :organizationId " +
+            "AND (e.status = 'APPROVED' OR e.status = 'COMPLETED') " +
+            "AND e.activity.endDateTime < CURRENT_TIMESTAMP ")
+    Long countApprovedByOrganizationId(@Param("organizationId") Long organizationId);
+
+    @Query("SELECT COUNT(e) FROM Enrollment e WHERE e.activity.organization.organizationId = :organizationId " +
+            "AND (e.status = 'APPROVED' OR e.status = 'COMPLETED')" +
+            "AND e.activity.endDateTime < CURRENT_TIMESTAMP")
+    Long countApprovedEndedByOrganizationId(@Param("organizationId") Long organizationId);
 }

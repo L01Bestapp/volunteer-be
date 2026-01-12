@@ -732,7 +732,7 @@ class AuthServiceImplTest {
 
     @Test
     @DisplayName("Google OAuth - Success for new user with HCMUT email")
-    void verifyGoogleIdToken_Success_ForNewHcmutUser() {
+    void verifyGoogleIdToken_ForStudent_Success_ForNewHcmutUser() {
         // Arrange
         String idToken = "valid.google.id.token";
         Map<String, Object> googleUserInfo = new HashMap<>();
@@ -782,7 +782,7 @@ class AuthServiceImplTest {
         when(studentRepository.save(any(Student.class))).thenReturn(newStudent);
 
         // Act
-        GoogleSignInResponseDto response = authService.verifyGoogleIdToken(idToken);
+        GoogleSignInResponseDto response = authService.verifyGoogleIdTokenForStudent(idToken);
 
         // Assert
         assertThat(response).isNotNull();
@@ -799,7 +799,7 @@ class AuthServiceImplTest {
 
     @Test
     @DisplayName("Google OAuth - Success for existing user with completed profile")
-    void verifyGoogleIdToken_Success_ForExistingUserWithProfile() {
+    void verifyGoogleIdToken_ForStudent_Success_ForExistingUserWithProfile() {
         // Arrange
         String idToken = "valid.google.id.token";
         Map<String, Object> googleUserInfo = new HashMap<>();
@@ -833,7 +833,7 @@ class AuthServiceImplTest {
         when(userRepository.save(any(User.class))).thenReturn(testUser);
 
         // Act
-        GoogleSignInResponseDto response = authService.verifyGoogleIdToken(idToken);
+        GoogleSignInResponseDto response = authService.verifyGoogleIdTokenForStudent(idToken);
 
         // Assert
         assertThat(response).isNotNull();
@@ -849,7 +849,7 @@ class AuthServiceImplTest {
 
     @Test
     @DisplayName("Google OAuth - Fails for non-HCMUT email domain")
-    void verifyGoogleIdToken_ThrowsException_ForNonHcmutEmail() {
+    void verifyGoogleIdToken_ForStudent_ThrowsException_ForNonHcmutEmail() {
         // Arrange
         String idToken = "valid.google.id.token";
         Map<String, Object> googleUserInfo = new HashMap<>();
@@ -869,7 +869,7 @@ class AuthServiceImplTest {
         when(responseSpec.bodyToMono(Map.class)).thenReturn(Mono.just(googleUserInfo));
 
         // Act & Assert
-        assertThatThrownBy(() -> authService.verifyGoogleIdToken(idToken))
+        assertThatThrownBy(() -> authService.verifyGoogleIdTokenForStudent(idToken))
                 .isInstanceOf(BusinessException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.EMAIL_DOMAIN_NOT_ALLOWED);
 
@@ -879,7 +879,7 @@ class AuthServiceImplTest {
 
     @Test
     @DisplayName("Google OAuth - Fails for locked account")
-    void verifyGoogleIdToken_ThrowsException_ForLockedAccount() {
+    void verifyGoogleIdToken_ForStudent_ThrowsException_ForLockedAccount() {
         // Arrange
         String idToken = "valid.google.id.token";
         Map<String, Object> googleUserInfo = new HashMap<>();
@@ -904,7 +904,7 @@ class AuthServiceImplTest {
         when(userRepository.findByEmail("test@hcmut.edu.vn")).thenReturn(Optional.of(testUser));
 
         // Act & Assert
-        assertThatThrownBy(() -> authService.verifyGoogleIdToken(idToken))
+        assertThatThrownBy(() -> authService.verifyGoogleIdTokenForStudent(idToken))
                 .isInstanceOf(BusinessException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.ACCOUNT_LOCKED);
 
@@ -914,7 +914,7 @@ class AuthServiceImplTest {
 
     @Test
     @DisplayName("Google OAuth - Updates provider ID for existing user without provider")
-    void verifyGoogleIdToken_UpdatesProviderId_ForExistingUserWithoutProvider() {
+    void verifyGoogleIdToken_UpdatesProviderId_ForExistingUserWithoutProviderForStudent() {
         // Arrange
         String idToken = "valid.google.id.token";
         Map<String, Object> googleUserInfo = new HashMap<>();
@@ -947,7 +947,7 @@ class AuthServiceImplTest {
         when(userRepository.save(any(User.class))).thenReturn(testUser);
 
         // Act
-        GoogleSignInResponseDto response = authService.verifyGoogleIdToken(idToken);
+        GoogleSignInResponseDto response = authService.verifyGoogleIdTokenForStudent(idToken);
 
         // Assert
         assertThat(response).isNotNull();
@@ -959,7 +959,7 @@ class AuthServiceImplTest {
 
     @Test
     @DisplayName("Google OAuth - Fails with invalid token")
-    void verifyGoogleIdToken_ThrowsException_WithInvalidToken() {
+    void verifyGoogleIdToken_ThrowsException_WithInvalidTokenForStudent() {
         // Arrange
         String idToken = "invalid.google.id.token";
         Map<String, Object> errorResponse = Map.of("error", "invalid_token");
@@ -975,7 +975,7 @@ class AuthServiceImplTest {
         when(responseSpec.bodyToMono(Map.class)).thenReturn(Mono.just(errorResponse));
 
         // Act & Assert
-        assertThatThrownBy(() -> authService.verifyGoogleIdToken(idToken))
+        assertThatThrownBy(() -> authService.verifyGoogleIdTokenForStudent(idToken))
                 .isInstanceOf(BusinessException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.TOKEN_INVALID);
 

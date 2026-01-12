@@ -6,7 +6,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Component
 public class ImageValidator {
 
-    private static final long MAX_FILE_SIZE = 2 * 1024L * 1024; // 1MB
+    private static final long MAX_FILE_SIZE = 10 * 1024L * 1024; // 1MB
     private static final int MAX_WIDTH = 2048;
     private static final int MAX_HEIGHT = 2048;
 
@@ -32,7 +32,7 @@ public class ImageValidator {
 
         // 2. Validate size
         if (file.getSize() > MAX_FILE_SIZE) {
-            throw new IllegalArgumentException("File size must be less than 2MB");
+            throw new IllegalArgumentException("File size must be less than 10MB");
         }
 
 //        // 3. Validate kích thước ảnh

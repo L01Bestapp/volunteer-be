@@ -11,7 +11,6 @@ public enum ErrorCode {
     INTERNAL_SERVER_ERROR(1000, "Internal server error occurred", HttpStatus.INTERNAL_SERVER_ERROR),
     INVALID_INPUT(1001, "Invalid input provided", HttpStatus.BAD_REQUEST),
     RESOURCE_NOT_FOUND(1002, "Requested resource not found", HttpStatus.NOT_FOUND),
-    UNAUTHORIZED(1003, "Authentication is required", HttpStatus.UNAUTHORIZED),
     FORBIDDEN(1004, "You don't have permission to access this resource", HttpStatus.FORBIDDEN),
     METHOD_NOT_ALLOWED(1005, "HTTP method not allowed", HttpStatus.METHOD_NOT_ALLOWED),
     CONFLICT(1006, "Resource conflict occurred", HttpStatus.CONFLICT),
@@ -84,7 +83,7 @@ public enum ErrorCode {
 
     // ============ ENROLLMENT ERRORS (1600-1699) ============
     ENROLLMENT_NOT_FOUND(1600, "Enrollment not found", HttpStatus.NOT_FOUND),
-    ALREADY_ENROLLED(1601, "You have already enrolled in this activity", HttpStatus.CONFLICT),
+    ALREADY_REGISTRATION(1601, "You are already registered for this activity", HttpStatus.CONFLICT),
     ENROLLMENT_PENDING(1602, "Your enrollment is pending approval", HttpStatus.BAD_REQUEST),
     ENROLLMENT_REJECTED(1603, "Your enrollment has been rejected", HttpStatus.BAD_REQUEST),
     ENROLLMENT_CANNOT_BE_CANCELLED(1604, "Enrollment cannot be cancelled", HttpStatus.BAD_REQUEST),

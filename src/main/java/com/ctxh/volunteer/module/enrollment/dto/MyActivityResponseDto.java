@@ -27,6 +27,7 @@ public class MyActivityResponseDto {
     // Activity info
     private Long activityId;
     private String activityTitle;
+    private String activityImage;
     private String shortDescription;
     private ActivityCategory category;
     private RegistrationState registrationState;
