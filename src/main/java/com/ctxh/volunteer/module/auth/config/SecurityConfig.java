@@ -21,7 +21,6 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-@EnableConfigurationProperties(RSAKeyRecord.class)
 public class SecurityConfig {
     private final CustomJwtDecoder customJwtDecoder;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;

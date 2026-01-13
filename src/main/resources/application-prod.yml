@@ -83,8 +83,9 @@ cloudinary:
   api-secret: ${CLOUDINARY_API_SECRET}
 
 jwt:
-  rsa-private-key: classpath:certs/privateKey.pem
-  rsa-public-key: classpath:certs/publicKey.pem
+  # Using environment variables for RSA keys content (PEM format)
+  rsa-private-key-content: ${JWT_PRIVATE_KEY_CONTENT}
+  rsa-public-key-content: ${JWT_PUBLIC_KEY_CONTENT}
   key-id: ${JWT_KEY_ID:ctxh-key}
   expirationTime: ${EXP_TOKEN:604800} # 7 days in seconds
   refreshExpTime: ${EXP_REFRESH_TOKEN:2592000} # 30 days in seconds
