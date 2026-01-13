@@ -68,6 +68,9 @@ class StudentServiceImplTest {
     @Mock
     private RoleRepository roleRepository;
 
+    @Mock
+    private com.ctxh.volunteer.module.auth.service.AuthService authService;
+
     @InjectMocks
     private StudentServiceImpl studentService;
 
@@ -124,7 +127,7 @@ class StudentServiceImplTest {
 
     @Test
     @DisplayName("Register Student - Success creates new student")
-    void registerStudent_Success_CreatesNewStudent() {
+    void registerStudent_Success_CreatesNewStudent() throws Exception {
         // Arrange
         when(studentRepository.existsByMssv(createRequest.getMssv())).thenReturn(false);
         when(userRepository.existsByEmail(createRequest.getEmail())).thenReturn(false);
@@ -132,6 +135,7 @@ class StudentServiceImplTest {
         when(passwordEncoder.encode(createRequest.getPassword())).thenReturn("$2a$10$encodedPassword");
         when(userRepository.save(any(User.class))).thenReturn(testUser);
         when(studentRepository.save(any(Student.class))).thenReturn(testStudent);
+        doNothing().when(authService).resendVerificationEmail(anyString());
 
         // Act
         StudentResponseDto response = studentService.registerStudent(createRequest);
@@ -147,6 +151,7 @@ class StudentServiceImplTest {
         verify(passwordEncoder).encode(createRequest.getPassword());
         verify(userRepository).save(any(User.class));
         verify(studentRepository).save(any(Student.class));
+        verify(authService).resendVerificationEmail(createRequest.getEmail());
     }
 
     @Test
@@ -201,7 +206,7 @@ class StudentServiceImplTest {
 
     @Test
     @DisplayName("Register Student - Calls save on student repository")
-    void registerStudent_CallsSaveOnStudentRepository() {
+    void registerStudent_CallsSaveOnStudentRepository() throws Exception {
         // Arrange
         when(studentRepository.existsByMssv(createRequest.getMssv())).thenReturn(false);
         when(userRepository.existsByEmail(createRequest.getEmail())).thenReturn(false);
@@ -209,6 +214,7 @@ class StudentServiceImplTest {
         when(passwordEncoder.encode(anyString())).thenReturn("$2a$10$encodedPassword");
         when(userRepository.save(any(User.class))).thenReturn(testUser);
         when(studentRepository.save(any(Student.class))).thenReturn(testStudent);
+        doNothing().when(authService).resendVerificationEmail(anyString());
 
         // Act
         studentService.registerStudent(createRequest);

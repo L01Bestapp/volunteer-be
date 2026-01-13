@@ -17,6 +17,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
@@ -52,12 +55,23 @@ class AttendanceControllerTest {
     @MockBean
     private AttendanceService attendanceService;
 
+    @MockBean
+    private SecurityContext securityContext;
+
+    @MockBean
+    private Authentication authentication;
+
     private QrCheckInRequestDto checkInRequest;
     private QrCheckOutRequestDto checkOutRequest;
     private AttendanceResponseDto attendanceResponse;
 
     @BeforeEach
     void setUp() {
+        // Mock SecurityContext for AuthUtil.getIdFromAuthentication()
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getName()).thenReturn("1");
+        SecurityContextHolder.setContext(securityContext);
+
         // Setup check-in request
         checkInRequest = new QrCheckInRequestDto();
         checkInRequest.setQrCodeData("STUDENT-1-2012345");

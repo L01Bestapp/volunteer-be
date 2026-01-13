@@ -28,6 +28,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -59,6 +60,9 @@ class AttendanceServiceImplTest {
 
     @Mock
     private CertificateService certificateService;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private AttendanceServiceImpl attendanceService;
@@ -321,6 +325,7 @@ class AttendanceServiceImplTest {
         when(certificateService.certificateExists(1L)).thenReturn(false);
         when(certificateService.generateCertificate(any(Enrollment.class)))
                 .thenReturn(mock(Certificate.class));
+        doNothing().when(eventPublisher).publishEvent(any());
 
         // Act
         AttendanceResponseDto result = attendanceService.checkOut(checkOutRequest);
@@ -334,6 +339,7 @@ class AttendanceServiceImplTest {
         verify(enrollmentRepository).save(testEnrollment);
         verify(certificateService).certificateExists(1L);
         verify(certificateService).generateCertificate(testEnrollment);
+        verify(eventPublisher).publishEvent(any());
     }
 
     @Test
@@ -354,6 +360,7 @@ class AttendanceServiceImplTest {
         when(attendanceRepository.save(any(Attendance.class)))
                 .thenReturn(testAttendance);
         when(certificateService.certificateExists(1L)).thenReturn(true);
+        doNothing().when(eventPublisher).publishEvent(any());
 
         // Act
         attendanceService.checkOut(checkOutRequest);
@@ -361,6 +368,7 @@ class AttendanceServiceImplTest {
         // Assert
         verify(certificateService).certificateExists(1L);
         verify(certificateService, never()).generateCertificate(any());
+        verify(eventPublisher).publishEvent(any());
     }
 
     @Test
@@ -383,6 +391,7 @@ class AttendanceServiceImplTest {
         when(certificateService.certificateExists(1L)).thenReturn(false);
         doThrow(new RuntimeException("Certificate service error"))
                 .when(certificateService).generateCertificate(any(Enrollment.class));
+        doNothing().when(eventPublisher).publishEvent(any());
 
         // Act - Should not throw exception
         AttendanceResponseDto result = attendanceService.checkOut(checkOutRequest);
@@ -390,6 +399,7 @@ class AttendanceServiceImplTest {
         // Assert
         assertThat(result).isNotNull();
         verify(certificateService).generateCertificate(testEnrollment);
+        verify(eventPublisher).publishEvent(any());
     }
 
     @Test

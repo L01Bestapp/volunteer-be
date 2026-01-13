@@ -573,6 +573,7 @@ class AuthServiceImplTest {
                 .build();
 
         when(introspectToken.parseAndVerifyToken(refreshToken, publicKey)).thenReturn(claimsSet);
+        when(userRepository.findById(testUser.getUserId())).thenReturn(Optional.of(testUser));
         when(userRepository.findByRefreshTokenUuid(jwtId)).thenReturn(Optional.of(testUser));
 
         // Act

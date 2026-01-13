@@ -18,6 +18,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
@@ -54,12 +57,23 @@ class StudentControllerTest {
     @MockBean
     private StudentService studentService;
 
+    @MockBean
+    private SecurityContext securityContext;
+
+    @MockBean
+    private Authentication authentication;
+
     private CreateStudentRequestDto createRequest;
     private UpdateStudentRequestDto updateRequest;
     private StudentResponseDto studentResponse;
 
     @BeforeEach
     void setUp() {
+        // Mock SecurityContext for AuthUtil.getIdFromAuthentication()
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getName()).thenReturn("1");
+        SecurityContextHolder.setContext(securityContext);
+
         // Setup create request
         createRequest = new CreateStudentRequestDto();
         createRequest.setEmail("student@hcmut.edu.vn");
@@ -72,7 +86,6 @@ class StudentControllerTest {
         updateRequest = new UpdateStudentRequestDto();
         updateRequest.setFullName("Updated Name");
         updateRequest.setPhoneNumber("84123456789");
-        updateRequest.setFaculty("Computer Science");
 
         // Setup response
         studentResponse = StudentResponseDto.builder()
@@ -153,7 +166,7 @@ class StudentControllerTest {
     // ==================== UPDATE STUDENT TESTS ====================
 
     @Test
-    @DisplayName("PUT /{id} - Success updates student")
+    @DisplayName("PUT /update-profile - Success updates student")
     void updateStudent_Success_ReturnsOk() throws Exception {
         // Arrange
         StudentResponseDto updatedResponse = StudentResponseDto.builder()
@@ -167,7 +180,7 @@ class StudentControllerTest {
                 .thenReturn(updatedResponse);
 
         // Act & Assert
-        mockMvc.perform(put("/api/v1/students/1")
+        mockMvc.perform(put("/api/v1/students/update-profile")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk())
@@ -179,14 +192,14 @@ class StudentControllerTest {
     }
 
     @Test
-    @DisplayName("PUT /{id} - Fails when student not found")
+    @DisplayName("PUT /update-profile - Fails when student not found")
     void updateStudent_NotFound_ReturnsNotFound() throws Exception {
         // Arrange
-        when(studentService.updateStudent(eq(999L), any(UpdateStudentRequestDto.class)))
+        when(studentService.updateStudent(eq(1L), any(UpdateStudentRequestDto.class)))
                 .thenThrow(new BusinessException(ErrorCode.STUDENT_NOT_FOUND));
 
         // Act & Assert
-        mockMvc.perform(put("/api/v1/students/999")
+        mockMvc.perform(put("/api/v1/students/update-profile")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isNotFound())
@@ -274,8 +287,7 @@ class StudentControllerTest {
                 .thenReturn(List.of(historyDto));
 
         // Act & Assert
-        mockMvc.perform(get("/api/v1/students/participation/history")
-                        .param("studentId", "1"))
+        mockMvc.perform(get("/api/v1/students/participation/history"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("Participation history retrieved successfully"))
@@ -294,8 +306,7 @@ class StudentControllerTest {
                 .thenReturn(List.of());
 
         // Act & Assert
-        mockMvc.perform(get("/api/v1/students/participation/history")
-                        .param("studentId", "1"))
+        mockMvc.perform(get("/api/v1/students/participation/history"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data").isArray())
@@ -306,12 +317,11 @@ class StudentControllerTest {
     @DisplayName("GET /participation/history - Fails when student not found")
     void getParticipationHistory_StudentNotFound_ReturnsNotFound() throws Exception {
         // Arrange
-        when(studentService.getParticipationHistory(999L))
+        when(studentService.getParticipationHistory(1L))
                 .thenThrow(new BusinessException(ErrorCode.STUDENT_NOT_FOUND));
 
         // Act & Assert
-        mockMvc.perform(get("/api/v1/students/participation/history")
-                        .param("studentId", "999"))
+        mockMvc.perform(get("/api/v1/students/participation/history"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false));
     }
@@ -339,8 +349,7 @@ class StudentControllerTest {
                 .thenReturn(List.of(certificateDto));
 
         // Act & Assert
-        mockMvc.perform(get("/api/v1/students/certificates")
-                        .param("studentId", "1"))
+        mockMvc.perform(get("/api/v1/students/certificates"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("Certificates retrieved successfully"))
@@ -359,8 +368,7 @@ class StudentControllerTest {
                 .thenReturn(List.of());
 
         // Act & Assert
-        mockMvc.perform(get("/api/v1/students/certificates")
-                        .param("studentId", "1"))
+        mockMvc.perform(get("/api/v1/students/certificates"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data").isArray())
@@ -371,12 +379,11 @@ class StudentControllerTest {
     @DisplayName("GET /certificates - Fails when student not found")
     void getStudentCertificates_StudentNotFound_ReturnsNotFound() throws Exception {
         // Arrange
-        when(studentService.getStudentCertificates(999L))
+        when(studentService.getStudentCertificates(1L))
                 .thenThrow(new BusinessException(ErrorCode.STUDENT_NOT_FOUND));
 
         // Act & Assert
-        mockMvc.perform(get("/api/v1/students/certificates")
-                        .param("studentId", "999"))
+        mockMvc.perform(get("/api/v1/students/certificates"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false));
     }

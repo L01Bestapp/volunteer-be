@@ -68,7 +68,7 @@ class CustomUserDetailServiceImplTest {
         // Assert
         assertThat(userDetails).isNotNull();
         assertThat(userDetails).isInstanceOf(CustomUserDetails.class);
-        assertThat(userDetails.getUsername()).isEqualTo(testUser.getEmail()); // Returns email, not userId
+        assertThat(userDetails.getUsername()).isEqualTo("1"); // Returns userId as string
         assertThat(userDetails.getPassword()).isEqualTo(testUser.getPassword());
         assertThat(userDetails.getAuthorities()).isNotEmpty();
 
@@ -111,7 +111,7 @@ class CustomUserDetailServiceImplTest {
 
         // Assert
         assertThat(userDetails).isNotNull();
-        assertThat(userDetails.getUsername()).isEqualTo("user@hcmut.edu.vn"); // Returns email
+        assertThat(userDetails.getUsername()).isEqualTo("12345"); // Returns userId as string
         verify(userRepository).findByIdWithRoles(12345L);
     }
 

@@ -47,6 +47,18 @@ class OrganizationServiceImplTest {
     @Mock
     private RoleRepository roleRepository;
 
+    @Mock
+    private com.ctxh.volunteer.module.auth.service.AuthService authService;
+
+    @Mock
+    private com.ctxh.volunteer.module.activity.repository.ActivityRepository activityRepository;
+
+    @Mock
+    private com.ctxh.volunteer.module.enrollment.repository.EnrollmentRepository enrollmentRepository;
+
+    @Mock
+    private com.ctxh.volunteer.module.attendance.repository.AttendanceRepository attendanceRepository;
+
     @InjectMocks
     private OrganizationServiceImpl organizationService;
 
@@ -104,10 +116,11 @@ class OrganizationServiceImplTest {
 
     @Test
     @DisplayName("Register Organization - Success creates new organization")
-    void registerOrganization_Success_CreatesNewOrganization() {
+    void registerOrganization_Success_CreatesNewOrganization() throws Exception {
         // Arrange
         when(organizationRepository.existsByOrganizationName(createRequest.getOrganizationName()))
                 .thenReturn(false);
+        when(userRepository.existsByEmail(createRequest.getEmail())).thenReturn(false);
         when(roleRepository.findByRoleName(RoleEnum.ORGANIZATION.name()))
                 .thenReturn(Optional.of(organizationRole));
         when(passwordEncoder.encode(createRequest.getPassword()))
@@ -119,6 +132,7 @@ class OrganizationServiceImplTest {
                     user.getOrganization().setOrganizationId(1L);
                     return user;
                 });
+        doNothing().when(authService).resendVerificationEmail(anyString());
 
         // Act
         OrganizationResponseDto result = organizationService.registerOrganization(createRequest);
@@ -134,6 +148,7 @@ class OrganizationServiceImplTest {
         verify(roleRepository).findByRoleName(RoleEnum.ORGANIZATION.name());
         verify(passwordEncoder).encode(createRequest.getPassword());
         verify(userRepository).save(any(User.class));
+        verify(authService).resendVerificationEmail(createRequest.getEmail());
     }
 
     @Test
@@ -172,9 +187,10 @@ class OrganizationServiceImplTest {
 
     @Test
     @DisplayName("Register Organization - Encodes password")
-    void registerOrganization_EncodesPassword() {
+    void registerOrganization_EncodesPassword() throws Exception {
         // Arrange
         when(organizationRepository.existsByOrganizationName(anyString())).thenReturn(false);
+        when(userRepository.existsByEmail(anyString())).thenReturn(false);
         when(roleRepository.findByRoleName(RoleEnum.ORGANIZATION.name()))
                 .thenReturn(Optional.of(organizationRole));
         when(passwordEncoder.encode(createRequest.getPassword()))
@@ -186,6 +202,7 @@ class OrganizationServiceImplTest {
                     user.getOrganization().setOrganizationId(1L);
                     return user;
                 });
+        doNothing().when(authService).resendVerificationEmail(anyString());
 
         // Act
         organizationService.registerOrganization(createRequest);
@@ -196,9 +213,10 @@ class OrganizationServiceImplTest {
 
     @Test
     @DisplayName("Register Organization - Sets default avatar URL")
-    void registerOrganization_SetsDefaultAvatar() {
+    void registerOrganization_SetsDefaultAvatar() throws Exception {
         // Arrange
         when(organizationRepository.existsByOrganizationName(anyString())).thenReturn(false);
+        when(userRepository.existsByEmail(anyString())).thenReturn(false);
         when(roleRepository.findByRoleName(RoleEnum.ORGANIZATION.name()))
                 .thenReturn(Optional.of(organizationRole));
         when(passwordEncoder.encode(anyString())).thenReturn("encoded");
@@ -209,6 +227,7 @@ class OrganizationServiceImplTest {
                     user.getOrganization().setOrganizationId(1L);
                     return user;
                 });
+        doNothing().when(authService).resendVerificationEmail(anyString());
 
         // Act
         OrganizationResponseDto result = organizationService.registerOrganization(createRequest);
@@ -219,9 +238,10 @@ class OrganizationServiceImplTest {
 
     @Test
     @DisplayName("Register Organization - Assigns organization role")
-    void registerOrganization_AssignsOrganizationRole() {
+    void registerOrganization_AssignsOrganizationRole() throws Exception {
         // Arrange
         when(organizationRepository.existsByOrganizationName(anyString())).thenReturn(false);
+        when(userRepository.existsByEmail(anyString())).thenReturn(false);
         when(roleRepository.findByRoleName(RoleEnum.ORGANIZATION.name()))
                 .thenReturn(Optional.of(organizationRole));
         when(passwordEncoder.encode(anyString())).thenReturn("encoded");
@@ -232,6 +252,7 @@ class OrganizationServiceImplTest {
                     user.getOrganization().setOrganizationId(1L);
                     return user;
                 });
+        doNothing().when(authService).resendVerificationEmail(anyString());
 
         // Act
         organizationService.registerOrganization(createRequest);
@@ -242,11 +263,12 @@ class OrganizationServiceImplTest {
 
     @Test
     @DisplayName("Register Organization - Sets correct organization type")
-    void registerOrganization_SetsCorrectType() {
+    void registerOrganization_SetsCorrectType() throws Exception {
         // Arrange
         createRequest.setOrganizationType("GOVERNMENT");
 
         when(organizationRepository.existsByOrganizationName(anyString())).thenReturn(false);
+        when(userRepository.existsByEmail(anyString())).thenReturn(false);
         when(roleRepository.findByRoleName(RoleEnum.ORGANIZATION.name()))
                 .thenReturn(Optional.of(organizationRole));
         when(passwordEncoder.encode(anyString())).thenReturn("encoded");
@@ -257,6 +279,7 @@ class OrganizationServiceImplTest {
                     user.getOrganization().setOrganizationId(1L);
                     return user;
                 });
+        doNothing().when(authService).resendVerificationEmail(anyString());
 
         // Act
         OrganizationResponseDto result = organizationService.registerOrganization(createRequest);

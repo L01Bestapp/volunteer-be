@@ -141,7 +141,7 @@ class MailServiceTest {
         verify(mailSender).send(mimeMessageCaptor.capture());
         MimeMessage sentMessage = mimeMessageCaptor.getValue();
         assertThat(sentMessage.getFrom()).isNotEmpty();
-        assertThat(sentMessage.getFrom()[0].toString()).contains("QUniverse");
+        assertThat(sentMessage.getFrom()[0].toString()).contains("Uni Volunteer");
     }
 
     @Test

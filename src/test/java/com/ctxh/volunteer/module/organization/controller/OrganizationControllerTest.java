@@ -24,6 +24,9 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -65,12 +68,23 @@ class OrganizationControllerTest {
     @MockBean
     private org.springframework.security.core.userdetails.UserDetailsService userDetailsService;
 
+    @MockBean
+    private SecurityContext securityContext;
+
+    @MockBean
+    private Authentication authentication;
+
     private CreateOrganizationRequestDto createRequest;
     private UpdateOrganizationRequestDto updateRequest;
     private OrganizationResponseDto organizationResponse;
 
     @BeforeEach
     void setUp() {
+        // Mock SecurityContext for AuthUtil.getIdFromAuthentication()
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getName()).thenReturn("1");
+        SecurityContextHolder.setContext(securityContext);
+
         // Setup create request
         createRequest = new CreateOrganizationRequestDto();
         createRequest.setEmail("org@example.com");
@@ -196,7 +210,7 @@ class OrganizationControllerTest {
     // ==================== UPDATE ORGANIZATION TESTS ====================
 
     @Test
-    @DisplayName("PUT /{id} - Success updates organization")
+    @DisplayName("PUT /profile - Success updates organization")
     void updateOrganization_Success_ReturnsOk() throws Exception {
         // Arrange
         OrganizationResponseDto updatedResponse = OrganizationResponseDto.builder()
@@ -214,7 +228,7 @@ class OrganizationControllerTest {
                 .thenReturn(updatedResponse);
 
         // Act & Assert
-        mockMvc.perform(put("/api/v1/organization/1")
+        mockMvc.perform(put("/api/v1/organization/profile")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk())
@@ -227,14 +241,14 @@ class OrganizationControllerTest {
     }
 
     @Test
-    @DisplayName("PUT /{id} - Fails when organization not found")
+    @DisplayName("PUT /profile - Fails when organization not found")
     void updateOrganization_NotFound_ReturnsNotFound() throws Exception {
         // Arrange
-        when(organizationService.updateOrganization(eq(999L), any(UpdateOrganizationRequestDto.class)))
+        when(organizationService.updateOrganization(eq(1L), any(UpdateOrganizationRequestDto.class)))
                 .thenThrow(new BusinessException(ErrorCode.ORGANIZATION_NOT_FOUND));
 
         // Act & Assert
-        mockMvc.perform(put("/api/v1/organization/999")
+        mockMvc.perform(put("/api/v1/organization/profile")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isNotFound())
@@ -242,7 +256,7 @@ class OrganizationControllerTest {
     }
 
     @Test
-    @DisplayName("PUT /{id} - Accepts partial updates")
+    @DisplayName("PUT /profile - Accepts partial updates")
     void updateOrganization_PartialUpdate_Works() throws Exception {
         // Arrange
         UpdateOrganizationRequestDto partialUpdate = new UpdateOrganizationRequestDto();
@@ -261,7 +275,7 @@ class OrganizationControllerTest {
                 .thenReturn(updatedResponse);
 
         // Act & Assert
-        mockMvc.perform(put("/api/v1/organization/1")
+        mockMvc.perform(put("/api/v1/organization/profile")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(partialUpdate)))
                 .andExpect(status().isOk())
@@ -269,7 +283,7 @@ class OrganizationControllerTest {
     }
 
     @Test
-    @DisplayName("PUT /{id} - Accepts empty update request")
+    @DisplayName("PUT /profile - Accepts empty update request")
     void updateOrganization_EmptyRequest_Works() throws Exception {
         // Arrange
         UpdateOrganizationRequestDto emptyUpdate = new UpdateOrganizationRequestDto();
@@ -278,7 +292,7 @@ class OrganizationControllerTest {
                 .thenReturn(organizationResponse);
 
         // Act & Assert
-        mockMvc.perform(put("/api/v1/organization/1")
+        mockMvc.perform(put("/api/v1/organization/profile")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(emptyUpdate)))
                 .andExpect(status().isOk())
@@ -288,17 +302,17 @@ class OrganizationControllerTest {
     // ==================== GET ORGANIZATION BY ID TESTS ====================
 
     @Test
-    @DisplayName("GET /{id} - Success returns organization")
+    @DisplayName("GET /profile - Success returns organization")
     void getOrganizationById_Success_ReturnsOrganization() throws Exception {
         // Arrange
         when(organizationService.getOrganizationById(1L))
                 .thenReturn(organizationResponse);
 
         // Act & Assert
-        mockMvc.perform(get("/api/v1/organization/1"))
+        mockMvc.perform(get("/api/v1/organization/profile"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("Organization retrieved successfully"))
+                .andExpect(jsonPath("$.message").value("retrieved Organization successfully"))
                 .andExpect(jsonPath("$.data.organizationId").value(1L))
                 .andExpect(jsonPath("$.data.organizationName").value("Test Organization"))
                 .andExpect(jsonPath("$.data.email").value("org@example.com"))
@@ -306,27 +320,27 @@ class OrganizationControllerTest {
     }
 
     @Test
-    @DisplayName("GET /{id} - Fails when organization not found")
+    @DisplayName("GET /profile - Fails when organization not found")
     void getOrganizationById_NotFound_ReturnsNotFound() throws Exception {
         // Arrange
-        when(organizationService.getOrganizationById(999L))
+        when(organizationService.getOrganizationById(1L))
                 .thenThrow(new BusinessException(ErrorCode.ORGANIZATION_NOT_FOUND));
 
         // Act & Assert
-        mockMvc.perform(get("/api/v1/organization/999"))
+        mockMvc.perform(get("/api/v1/organization/profile"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false));
     }
 
     @Test
-    @DisplayName("GET /{id} - Returns all organization details")
+    @DisplayName("GET /profile - Returns all organization details")
     void getOrganizationById_ReturnsAllDetails() throws Exception {
         // Arrange
         when(organizationService.getOrganizationById(1L))
                 .thenReturn(organizationResponse);
 
         // Act & Assert
-        mockMvc.perform(get("/api/v1/organization/1"))
+        mockMvc.perform(get("/api/v1/organization/profile"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.organizationId").value(1L))
                 .andExpect(jsonPath("$.data.organizationName").value("Test Organization"))
@@ -355,13 +369,13 @@ class OrganizationControllerTest {
     }
 
     @Test
-    @DisplayName("PUT /{id} - Validates email format in update")
+    @DisplayName("PUT /profile - Validates email format in update")
     void updateOrganization_InvalidEmailFormat_ReturnsBadRequest() throws Exception {
         // Arrange
         updateRequest.setRepresentativeEmail("invalid-email");
 
         // Act & Assert
-        mockMvc.perform(put("/api/v1/organization/1")
+        mockMvc.perform(put("/api/v1/organization/profile")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isBadRequest());

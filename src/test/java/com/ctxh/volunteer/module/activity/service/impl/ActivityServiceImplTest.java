@@ -24,8 +24,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -37,6 +42,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.lenient;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ActivityService Unit Tests")
@@ -57,6 +63,15 @@ class ActivityServiceImplTest {
     @Mock
     private com.cloudinary.Cloudinary cloudinary;
 
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
+    @Mock
+    private SecurityContext securityContext;
+
+    @Mock
+    private Authentication authentication;
+
     @InjectMocks
     private ActivityServiceImpl activityService;
 
@@ -67,11 +82,26 @@ class ActivityServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        // Mock SecurityContext with lenient to avoid UnnecessaryStubbingException
+        lenient().when(securityContext.getAuthentication()).thenReturn(authentication);
+        lenient().when(authentication.getName()).thenReturn("1");
+        SecurityContextHolder.setContext(securityContext);
+
         // Create test organization
+        User orgUser = User.builder()
+                .userId(1L)
+                .email("org@test.com")
+                .isVerified(true)
+                .build();
+
         testOrganization = Organization.builder()
                 .organizationId(1L)
                 .organizationName("Test Organization")
+                .user(orgUser)
+                .verificationStatus(com.ctxh.volunteer.module.organization.enums.VerificationStatus.APPROVED)
                 .build();
+
+        orgUser.setOrganization(testOrganization);
 
         // Create test activity
         testActivity = Activity.builder()
@@ -90,7 +120,7 @@ class ActivityServiceImplTest {
                 .pendingParticipants(0)
                 .approvedParticipants(0)
                 .theNumberOfCtxhDay(1.0)
-                .status(RegistrationState.OPEN)
+                .registrationState(RegistrationState.OPEN)
                 .build();
 
         // Create request DTOs
@@ -135,14 +165,14 @@ class ActivityServiceImplTest {
     @DisplayName("Create Activity - Fails when organization not found")
     void createActivity_ThrowsException_WhenOrganizationNotFound() {
         // Arrange
-        when(organizationRepository.findById(anyLong())).thenReturn(Optional.empty());
+        when(organizationRepository.findById(1L)).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThatThrownBy(() -> activityService.createActivity( createRequest, null))
                 .isInstanceOf(BusinessException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.ORGANIZATION_NOT_FOUND);
 
-        verify(organizationRepository).findById(999L);
+        verify(organizationRepository).findById(1L);
         verify(activityRepository, never()).save(any());
     }
 
