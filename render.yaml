@@ -2,17 +2,6 @@
 # https://render.com/docs/blueprint-spec
 
 services:
-  # PostgreSQL Database
-  - type: pserv
-    name: volunteer-db
-    env: docker
-    plan: free # hoặc starter
-    region: singapore
-    databases:
-      - name: volunteer_db
-        databaseName: volunteer_db
-        user: volunteer
-
   # Spring Boot Web Service
   - type: web
     name: volunteer-api
@@ -37,31 +26,22 @@ services:
       - key: SERVER_PORT
         value: 8080
 
-      # Database connection (tự động link từ volunteer-db)
+      # Database connection (từ Render PostgreSQL service đã tạo)
+      # IMPORTANT: Nếu dùng render.yaml để deploy, set các biến này trên Dashboard thay vì hardcode
       - key: POSTGRES_HOST
-        fromDatabase:
-          name: volunteer-db
-          property: host
+        value: dpg-d5j5ic14tr6s73e521lg-a.singapore-postgres.render.com
 
       - key: POSTGRES_PORT
-        fromDatabase:
-          name: volunteer-db
-          property: port
+        value: 5432
 
       - key: POSTGRES_DB
-        fromDatabase:
-          name: volunteer-db
-          property: database
+        value: volunteer_db_5xrg
 
       - key: POSTGRES_USER
-        fromDatabase:
-          name: volunteer-db
-          property: user
+        value: volunteer
 
       - key: POSTGRES_PASSWORD
-        fromDatabase:
-          name: volunteer-db
-          property: password
+        sync: false  # CẦN SET MANUAL trên Dashboard (sensitive)
 
       # Base URL (thay bằng URL thực tế của bạn)
       - key: BASE_URL_WEBSITE
