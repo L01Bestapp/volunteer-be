@@ -1,54 +1,46 @@
-# Multi-stage build for Spring Boot application
-
 # Stage 1: Build stage
 FROM maven:3.9.9-eclipse-temurin-21-alpine AS build
 WORKDIR /app
 
-# Copy pom.xml and download dependencies (cached layer)
-# This layer is cached unless pom.xml changes
+# 1. Dependency Caching Layer (Tối ưu nhất)
 COPY pom.xml .
-RUN mvn dependency:go-offline -B || mvn dependency:resolve -B || true
+# Lệnh này tải toàn bộ dependencies và plugins cần thiết
+# Không cần dùng "|| true" hay "-o", hãy để nó fail nếu mạng lỗi để biết đường sửa
+RUN mvn dependency:go-offline -B
 
-# Copy source code and build
-# Only this layer rebuilds when source code changes
+# 2. Build Layer
 COPY src ./src
-RUN mvn package -DskipTests -B -o 2>/dev/null || mvn package -DskipTests -B
+# Build package và đổi tên file output thành app.jar ngay tại đây để dễ copy
+RUN mvn clean package -DskipTests -B && \
+    cp target/*.jar app.jar
 
-# Stage 2: Runtime stage - Use minimal JRE
+# Stage 2: Runtime stage
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
-# Add non-root user for security
+# Security: Setup non-root user
 RUN addgroup -S spring && adduser -S spring -G spring
 USER spring:spring
 
-# Copy jar from build stage
-COPY --from=build /app/target/*.jar app.jar
+# Copy file jar đã được đổi tên (Tránh dùng *.jar dễ copy nhầm file)
+COPY --from=build /app/app.jar app.jar
 
-# Expose port
 EXPOSE 8080
 
-# Health check
+# Health check (Giữ nguyên vì đã tốt)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
 
-# JVM Memory Optimization for 512MB RAM environment
-# Total RAM: 512MB
-# OS + processes: ~100MB
-# JVM available: ~400MB max
-# Heap: 300MB max (leave room for metaspace, code cache, threads)
+# JVM Optimization
+# - Đã xóa dòng /dev/./urandom (Java 17+ không cần nữa)
+# - Thêm ExitOnOutOfMemoryError: Để container tự restart nếu hết RAM (thay vì bị treo)
 ENV JAVA_TOOL_OPTIONS="\
     -XX:MaxRAMPercentage=75.0 \
     -XX:InitialRAMPercentage=50.0 \
     -XX:+UseContainerSupport \
     -XX:+UseG1GC \
-    -XX:MaxGCPauseMillis=100 \
-    -XX:+UseStringDeduplication \
-    -XX:+OptimizeStringConcat \
-    -Djava.security.egd=file:/dev/./urandom"
+    -XX:+ExitOnOutOfMemoryError \
+    -XX:+UseStringDeduplication"
 
-# Run the application
-ENTRYPOINT ["java", \
-    "-Dspring.profiles.active=prod", \
-    "-jar", \
-    "app.jar"]
+# Entrypoint
+ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -1,99 +1,63 @@
-# Render Blueprint - Volunteer Management System
-# https://render.com/docs/blueprint-spec
-
 services:
-  # Spring Boot Web Service
   - type: web
     name: volunteer-api
     env: docker
     region: singapore
-    plan: free # 512MB RAM, sleep sau 15 phút không dùng
-    # plan: starter # $7/month, 512MB RAM, không sleep
+    plan: free
     dockerfilePath: ./Dockerfile
     dockerContext: .
     healthCheckPath: /actuator/health
 
-    # Auto deploy khi push lên main branch
-    autoDeploy: true
+    # QUAN TRỌNG: Tắt autoDeploy để GitHub Actions nắm quyền kiểm soát
+    autoDeploy: false
     branch: main
 
-    # Environment Variables
     envVars:
-      # Spring Profile
       - key: SPRING_PROFILES_ACTIVE
         value: prod
-
       - key: SERVER_PORT
         value: 8080
-
-      # Database connection (từ Render PostgreSQL service đã tạo)
-      # IMPORTANT: Nếu dùng render.yaml để deploy, set các biến này trên Dashboard thay vì hardcode
       - key: POSTGRES_HOST
         value: dpg-d5j5ic14tr6s73e521lg-a.singapore-postgres.render.com
-
       - key: POSTGRES_PORT
         value: 5432
-
       - key: POSTGRES_DB
         value: volunteer_db_5xrg
-
       - key: POSTGRES_USER
         value: volunteer
-
       - key: POSTGRES_PASSWORD
-        sync: false  # CẦN SET MANUAL trên Dashboard (sensitive)
-
-      # Base URL (thay bằng URL thực tế của bạn)
+        sync: false
       - key: BASE_URL_WEBSITE
         value: https://volunteer-api.onrender.com
 
-      # JWT Keys - CẦN SET TRÊN RENDER DASHBOARD (sensitive data)
+      # Các key nhạy cảm (JWT, OAuth, Mail...) giữ nguyên sync: false
       - key: JWT_PRIVATE_KEY_CONTENT
-        sync: false # Không sync từ repo, phải set manual
-
+        sync: false
       - key: JWT_PUBLIC_KEY_CONTENT
         sync: false
-
       - key: JWT_KEY_ID
         value: ctxh-key
-
       - key: EXP_TOKEN
         value: 604800
-
       - key: EXP_REFRESH_TOKEN
         value: 2592000
-
-      # Admin credentials - CẦN SET TRÊN RENDER DASHBOARD
       - key: ADMIN_USERNAME
         sync: false
-
       - key: ADMIN_PASSWORD
         sync: false
-
-      # Firebase - CẦN SET TRÊN RENDER DASHBOARD
       - key: FIREBASE_SERVICE_ACCOUNT_JSON
         sync: false
-
-      # Google OAuth - CẦN SET TRÊN RENDER DASHBOARD
       - key: GOOGLE_CLIENT_ID
         sync: false
-
       - key: GOOGLE_CLIENT_SECRET
         sync: false
-
-      # Mail configuration - CẦN SET TRÊN RENDER DASHBOARD
       - key: MAIL_SENDER_USERNAME
         sync: false
-
       - key: MAIL_SENDER_PASSWORD
         sync: false
-
-      # Cloudinary - CẦN SET TRÊN RENDER DASHBOARD
       - key: CLOUDINARY_CLOUD_NAME
         sync: false
-
       - key: CLOUDINARY_API_KEY
         sync: false
-
       - key: CLOUDINARY_API_SECRET
         sync: false
