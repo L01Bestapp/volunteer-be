@@ -1,0 +1,119 @@
+# Render Blueprint - Volunteer Management System
+# https://render.com/docs/blueprint-spec
+
+services:
+  # PostgreSQL Database
+  - type: pserv
+    name: volunteer-db
+    env: docker
+    plan: free # hoặc starter
+    region: singapore
+    databases:
+      - name: volunteer_db
+        databaseName: volunteer_db
+        user: volunteer
+
+  # Spring Boot Web Service
+  - type: web
+    name: volunteer-api
+    env: docker
+    region: singapore
+    plan: free # 512MB RAM, sleep sau 15 phút không dùng
+    # plan: starter # $7/month, 512MB RAM, không sleep
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /actuator/health
+
+    # Auto deploy khi push lên main branch
+    autoDeploy: true
+    branch: main
+
+    # Environment Variables
+    envVars:
+      # Spring Profile
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+
+      - key: SERVER_PORT
+        value: 8080
+
+      # Database connection (tự động link từ volunteer-db)
+      - key: POSTGRES_HOST
+        fromDatabase:
+          name: volunteer-db
+          property: host
+
+      - key: POSTGRES_PORT
+        fromDatabase:
+          name: volunteer-db
+          property: port
+
+      - key: POSTGRES_DB
+        fromDatabase:
+          name: volunteer-db
+          property: database
+
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: volunteer-db
+          property: user
+
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: volunteer-db
+          property: password
+
+      # Base URL (thay bằng URL thực tế của bạn)
+      - key: BASE_URL_WEBSITE
+        value: https://volunteer-api.onrender.com
+
+      # JWT Keys - CẦN SET TRÊN RENDER DASHBOARD (sensitive data)
+      - key: JWT_PRIVATE_KEY_CONTENT
+        sync: false # Không sync từ repo, phải set manual
+
+      - key: JWT_PUBLIC_KEY_CONTENT
+        sync: false
+
+      - key: JWT_KEY_ID
+        value: ctxh-key
+
+      - key: EXP_TOKEN
+        value: 604800
+
+      - key: EXP_REFRESH_TOKEN
+        value: 2592000
+
+      # Admin credentials - CẦN SET TRÊN RENDER DASHBOARD
+      - key: ADMIN_USERNAME
+        sync: false
+
+      - key: ADMIN_PASSWORD
+        sync: false
+
+      # Firebase - CẦN SET TRÊN RENDER DASHBOARD
+      - key: FIREBASE_SERVICE_ACCOUNT_JSON
+        sync: false
+
+      # Google OAuth - CẦN SET TRÊN RENDER DASHBOARD
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+
+      # Mail configuration - CẦN SET TRÊN RENDER DASHBOARD
+      - key: MAIL_SENDER_USERNAME
+        sync: false
+
+      - key: MAIL_SENDER_PASSWORD
+        sync: false
+
+      # Cloudinary - CẦN SET TRÊN RENDER DASHBOARD
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+
+      - key: CLOUDINARY_API_KEY
+        sync: false
+
+      - key: CLOUDINARY_API_SECRET
+        sync: false

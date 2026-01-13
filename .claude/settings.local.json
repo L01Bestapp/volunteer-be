@@ -6,7 +6,8 @@
       "Bash(findstr:*)",
       "Bash(ls:*)",
       "Bash(grep:*)",
-      "Bash(mvn test:*)"
+      "Bash(mvn test:*)",
+      "Bash(find:*)"
     ]
   }
 }

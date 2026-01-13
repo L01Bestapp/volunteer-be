@@ -1,0 +1,42 @@
+# Các file/folder không cần thiết khi deploy lên Render
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Build output (sẽ build lại trên Render)
+target/
+build/
+
+# Dependencies (sẽ download lại)
+.mvn/
+node_modules/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Git
+.git/
+.gitignore
+
+# Tests
+src/test/
+
+# Documentation
+*.md
+!README.md
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Coverage reports
+coverage/
+jacoco/
