@@ -1,4 +1,4 @@
-name: Java CI/CD with Maven & Render
+name: Java CI/CD with Maven & Docker Hub
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-test-verify:
-    name: Build, Test & Verify Docker
+    name: Build, Test & Verify
     runs-on: ubuntu-latest
 
     steps:
@@ -25,7 +25,7 @@ jobs:
       - name: Grant execute permission for mvnw
         run: chmod +x mvnw
 
-      # 1. Chạy Unit Test & Integration Test (verify tốt hơn test)
+      # 1. Chạy Unit Test & Integration Test
       - name: Run Tests with Maven
         run: ./mvnw clean verify
 
@@ -42,7 +42,7 @@ jobs:
           files: ./target/site/jacoco/jacoco.xml
           fail_ci_if_error: false
 
-      # 4. Upload Artifacts (để xem lại nếu cần)
+      # 4. Upload Artifacts
       - name: Upload Test Results & Coverage
         uses: actions/upload-artifact@v4
         if: always()
@@ -53,23 +53,58 @@ jobs:
             target/site/jacoco/
           retention-days: 15
 
-      # 5. Quan trọng: Kiểm tra xem Dockerfile có build được không
-      # Bước này giúp đảm bảo code Java ngon VÀ Dockerfile cũng ngon trước khi gọi Render
-      - name: Verify Docker Build
-        run: docker build . --file Dockerfile --tag volunteer-api:test
-
-  deploy:
-    name: Trigger Render Deploy
-    needs: build-test-verify # Chỉ chạy khi job trên thành công 100%
+  build-and-push-docker:
+    name: Build & Push Docker Image
+    needs: build-test-verify
     runs-on: ubuntu-latest
-    # Chỉ deploy khi code được merge vào main
+    # Chỉ build & push khi code được merge vào main
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Login vào Docker Hub
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Setup Docker Buildx (để build nhanh hơn và hỗ trợ cache)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Build và Push image lên Docker Hub
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/volunteer-api:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/volunteer-api:${{ github.sha }}
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/volunteer-api:latest
+          cache-to: type=inline
+
+      - name: Notification
+        run: echo "✅ Docker image pushed to Docker Hub successfully!"
+
+  deploy:
+    name: Trigger Render Deploy
+    needs: build-and-push-docker
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      # Đợi 30s để Docker Hub cập nhật registry
+      - name: Wait for Docker Hub
+        run: sleep 30
+
       - name: Call Render Deploy Hook
-        # Thêm -f để curl báo lỗi nếu HTTP status code >= 400
         run: |
           curl -f -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
 
       - name: Notification
-        run: echo "🚀 Deploy signal sent to Render! Check dashboard."
+        run: echo "🚀 Deploy signal sent to Render!"

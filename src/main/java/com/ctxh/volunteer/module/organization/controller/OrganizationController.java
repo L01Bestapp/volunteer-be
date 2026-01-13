@@ -44,6 +44,12 @@ public class OrganizationController {
         );
     }
 
+    @GetMapping("/list-pending-org")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<List<OrganizationResponseDto>> listPendingOrganization() {
+        return ApiResponse.ok("success get list pending organization",organizationService.getListPendingOrg());
+    }
+
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasRole('ADMIN')")

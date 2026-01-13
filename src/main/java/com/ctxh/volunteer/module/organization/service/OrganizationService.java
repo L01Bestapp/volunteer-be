@@ -19,4 +19,6 @@ public interface OrganizationService {
     List<OrganizationResponseDto> getAllOrganization();
 
     OrganizationStatisticsResponseDto getStatistics(Long organizationId);
+
+    List<OrganizationResponseDto> getListPendingOrg();
 }

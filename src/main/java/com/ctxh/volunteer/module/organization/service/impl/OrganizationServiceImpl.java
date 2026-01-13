@@ -19,6 +19,7 @@ import com.ctxh.volunteer.module.organization.dto.response.OrganizationStatistic
 import com.ctxh.volunteer.module.organization.dto.response.ParticipantStatsDto;
 import com.ctxh.volunteer.module.organization.entity.Organization;
 import com.ctxh.volunteer.module.organization.enums.OrganizationType;
+import com.ctxh.volunteer.module.organization.enums.VerificationStatus;
 import com.ctxh.volunteer.module.organization.repository.OrganizationRepository;
 import com.ctxh.volunteer.module.organization.service.OrganizationService;
 import com.ctxh.volunteer.module.auth.entity.User;
@@ -27,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -193,6 +195,13 @@ public class OrganizationServiceImpl implements OrganizationService {
                 .participantStats(participantStats)
                 .impactStats(impactStats)
                 .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<OrganizationResponseDto> getListPendingOrg() {
+        List<Organization> organizations = organizationRepository.findAllByVerificationStatus(VerificationStatus.PENDING);
+        return organizations.stream().map(this::mapToOrganizationResponseDto).toList();
     }
 
     private OrganizationResponseDto mapToOrganizationResponseDto(Organization organization) {
