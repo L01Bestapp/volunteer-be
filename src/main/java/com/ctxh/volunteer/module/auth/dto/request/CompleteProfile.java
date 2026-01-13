@@ -4,6 +4,7 @@ import com.ctxh.volunteer.common.util.EnumValidation;
 import com.ctxh.volunteer.module.student.enums.Gender;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,7 +18,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CompleteProfile {
-    @NotBlank(message = "User ID is required")
+    @NotNull(message = "User ID is required")
     private Long userId;
 
     @Schema(description = "User's password", example = "thangvip030201")
