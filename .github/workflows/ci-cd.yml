@@ -92,7 +92,7 @@ jobs:
         run: echo "✅ Docker image pushed to Docker Hub successfully!"
 
   deploy:
-    name: Trigger Render Deploy
+    name: Trigger Railway Deploy
     needs: build-and-push-docker
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -102,9 +102,9 @@ jobs:
       - name: Wait for Docker Hub
         run: sleep 30
 
-      - name: Call Render Deploy Hook
+      - name: Trigger Railway Deployment
         run: |
-          curl -f -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+          curl -f -X POST "${{ secrets.RAILWAY_DEPLOY_HOOK_URL }}"
 
       - name: Notification
-        run: echo "🚀 Deploy signal sent to Render!"
+        run: echo "🚀 Deploy signal sent to Railway!"

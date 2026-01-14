@@ -27,20 +27,5 @@ COPY --from=build /app/app.jar app.jar
 
 EXPOSE 8080
 
-# Health check (Giữ nguyên vì đã tốt)
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
-
-# JVM Optimization
-# - Đã xóa dòng /dev/./urandom (Java 17+ không cần nữa)
-# - Thêm ExitOnOutOfMemoryError: Để container tự restart nếu hết RAM (thay vì bị treo)
-ENV JAVA_TOOL_OPTIONS="\
-    -XX:MaxRAMPercentage=75.0 \
-    -XX:InitialRAMPercentage=50.0 \
-    -XX:+UseContainerSupport \
-    -XX:+UseG1GC \
-    -XX:+ExitOnOutOfMemoryError \
-    -XX:+UseStringDeduplication"
-
 # Entrypoint
 ENTRYPOINT ["java", "-jar", "app.jar"]
