@@ -106,7 +106,7 @@ jobs:
         run: sleep 30
 
       - name: Trigger Railway Redeploy
-        run: railway redeploy --service=${{ secrets.RAILWAY_SERVICE_ID }}
+        run: railway redeploy --service=${{ secrets.RAILWAY_SERVICE_ID }} --yes
 
       - name: Notification
         run: echo "🚀 Successfully deployed to Railway!"
