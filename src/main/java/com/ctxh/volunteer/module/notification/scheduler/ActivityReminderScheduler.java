@@ -32,7 +32,7 @@ public class ActivityReminderScheduler {
     /**
      * Run every 1 minute to check for activities starting soon
      */
-    @Scheduled(cron = "0 */1 * * * *")
+    @Scheduled(cron = "0 */10 * * * *")
     public void sendActivityReminders() {
         try {
             log.info("=== Running activity reminder scheduler at {} ===", LocalDateTime.now());
