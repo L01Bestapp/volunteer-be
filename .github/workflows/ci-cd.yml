@@ -92,7 +92,7 @@ jobs:
         run: echo "✅ Docker image pushed to Docker Hub successfully!"
 
   deploy:
-    name: Trigger Railway Deploy
+    name: Deploy to Railway
     needs: build-and-push-docker
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -102,9 +102,11 @@ jobs:
       - name: Wait for Docker Hub
         run: sleep 30
 
-      - name: Trigger Railway Deployment
-        run: |
-          curl -f -X POST "${{ secrets.RAILWAY_DEPLOY_HOOK_URL }}"
+      - name: Deploy to Railway
+        uses: bervProject/railway-deploy@main
+        with:
+          railway_token: ${{ secrets.RAILWAY_TOKEN }}
+          service: ${{ secrets.RAILWAY_SERVICE_ID }}
 
       - name: Notification
-        run: echo "🚀 Deploy signal sent to Railway!"
+        run: echo "🚀 Successfully deployed to Railway!"
