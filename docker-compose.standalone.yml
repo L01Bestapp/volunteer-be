@@ -1,0 +1,59 @@
+version: '3.8'
+
+# =====================================================
+# VOLUNTEER APP - Chi can pull va chay
+# Cach dung: docker-compose -f docker-compose.standalone.yml up -d
+# =====================================================
+
+services:
+  postgres:
+    image: quangthangk4/volunteer-db:latest
+    container_name: volunteer-postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U volunteer -d volunteer_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  app:
+    image: quangthangk4/volunteer-app:latest
+    container_name: volunteer-app
+    environment:
+      # Profile
+      SPRING_PROFILES_ACTIVE: dev
+
+      # Database
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/volunteer_db
+      SPRING_DATASOURCE_USERNAME: volunteer
+      SPRING_DATASOURCE_PASSWORD: volunteer
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+
+      # Google OAuth (thay bang gia tri thuc neu can dang nhap Google)
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-demo-client-id}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-demo-client-secret}
+
+      # Mail (thay bang gia tri thuc neu can gui email)
+      MAIL_SENDER_USERNAME: ${MAIL_SENDER_USERNAME:-demo@gmail.com}
+      MAIL_SENDER_PASSWORD: ${MAIL_SENDER_PASSWORD:-demo-password}
+
+      # Cloudinary (thay bang gia tri thuc neu can upload anh)
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-demo-cloud}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-demo-key}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-demo-secret}
+
+      # Base URL
+      BASE_URL_WEBSITE: http://localhost:8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
