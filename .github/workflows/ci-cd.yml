@@ -95,19 +95,18 @@ jobs:
     name: Deploy to Railway
     needs: build-and-push-docker
     runs-on: ubuntu-latest
+    container: ghcr.io/railwayapp/cli:latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
     steps:
       # Đợi 30s để Docker Hub cập nhật registry
       - name: Wait for Docker Hub
         run: sleep 30
 
-      - name: Deploy to Railway
-        uses: bervProject/railway-deploy@main
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        with:
-          service: ${{ secrets.RAILWAY_SERVICE_ID }}
+      - name: Trigger Railway Redeploy
+        run: railway redeploy --service=${{ secrets.RAILWAY_SERVICE_ID }}
 
       - name: Notification
         run: echo "🚀 Successfully deployed to Railway!"
